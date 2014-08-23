@@ -202,14 +202,14 @@ static void snake_move(void)
 		}
 		grid[temp->x][temp->y] = 'O';
 	}
-	if (eat)
+	if (eat) {
 		eat_fruit(i, k);
+		mvprintw(rowtot - 2, 1, "%d points\n", points);
+	}
 	for (i = 0; i < N; i++) {
 		for (k = 0; k < N; k++)
 			mvprintw(row + i * vert_space, col + k * horiz_space, "%c", grid[i][k]);
 	}
-	mvprintw(rowtot - 1, 1, "F2 anytime to *rage* quit. Arrow keys to move.\n");
-	mvprintw(rowtot - 2, 1, "%d points\n", points);
 	move(row + s->x * vert_space, col + s->y * horiz_space);
 }
 
