@@ -103,6 +103,8 @@ static int screen_init(int level)
 	wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
 	mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
 	mvwprintw(score, 1, 1, "%d points.", points);
+	mvwprintw(field, 0, 0, "Snake");
+	mvwprintw(score, 0, 0, "Score");
 	wrefresh(score);
 	return 0;
 }
