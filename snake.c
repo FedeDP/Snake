@@ -87,7 +87,7 @@ static int screen_init(int level)
 		break;
 	}
 	/* check terminal size */
-	if ((rowtot < ROWS + 2) || (coltot < COLS + 2)) {
+	if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
 		clear();
 		endwin();
 		printf("This screen has %d rows and %d columns. Enlarge it.\n", rowtot, coltot);
