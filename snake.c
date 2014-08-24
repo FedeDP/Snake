@@ -71,21 +71,6 @@ static int screen_init(int level)
 	raw();
 	noecho();
 	getmaxyx(stdscr, rowtot, coltot);
-	keypad(stdscr, TRUE);
-	switch (level) {
-	case 1:
-		wtimeout(stdscr, 250);
-		break;
-	case 2:
-		wtimeout(stdscr, 150);
-		break;
-	case 3:
-		wtimeout(stdscr, 100);
-		break;
-	case 4:
-		wtimeout(stdscr, 50);
-		break;
-	}
 	/* check terminal size */
 	if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
 		clear();
@@ -99,6 +84,21 @@ static int screen_init(int level)
 	k = (coltot - COLS - 2) / 2;
 	field = subwin(stdscr, ROWS + 2, COLS + 2, i, k);
 	score = subwin(stdscr, 2 + 2, coltot, rowtot - 4, 0);
+	keypad(field, TRUE);
+	switch (level) {
+	case 1:
+		wtimeout(field, 180);
+		break;
+	case 2:
+		wtimeout(field, 120);
+		break;
+	case 3:
+		wtimeout(field, 80);
+		break;
+	case 4:
+		wtimeout(field, 30);
+		break;
+	}
 	wborder(field, '|', '|', '-', '-', '+', '+', '+', '+');
 	wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
 	mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
@@ -239,7 +239,7 @@ static int main_cycle(void)
 {
 	wmove(field, s->x + 1, s->y + 1);
 	wrefresh(field);
-	switch (getch()) {
+	switch (wgetch(field)) {
 	case KEY_LEFT:
 		if ((s->direction != RIGHT) && (s->direction != LEFT))
 			change_directions(LEFT);
