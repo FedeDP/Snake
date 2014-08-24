@@ -101,8 +101,8 @@ static int screen_init(int level)
 	score = subwin(stdscr, 2 + 2, coltot, rowtot - 4, 0);
 	wborder(field, '|', '|', '-', '-', '+', '+', '+', '+');
 	wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
-	mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.\n");
-	mvwprintw(score, 1, 1, "%d points\n", points);
+	mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
+	mvwprintw(score, 1, 1, "%d points.", points);
 	wrefresh(score);
 	return 0;
 }
