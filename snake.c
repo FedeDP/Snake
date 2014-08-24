@@ -213,7 +213,7 @@ static void snake_move(void)
 	}
 	if (eat) {
 		eat_fruit(i, k);
-		mvwprintw(score, 1, 1, "%d points\n", points);
+		mvwprintw(score, 1, 1, "%d points.", points);
 		wrefresh(score);
 	}
 }
