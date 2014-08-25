@@ -277,8 +277,10 @@ static int main_cycle(void)
 static void eat_fruit(int x, int y)
 {
 	points = points + 7;
-	fruit_gen();
 	s = snake_grow(x, y);
+	if (points != 7 * COLS * ROWS)
+		fruit_gen();
+
 }
 
 static snake *snake_grow(int x, int y)
