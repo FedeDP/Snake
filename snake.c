@@ -23,6 +23,7 @@ typedef struct list {
 static int screen_init(int level);
 static void screen_end(void);
 static snake *reclist(snake *s, int i, snake *previous);
+static void freelist(snake *s);
 static void grid_init(void);
 static void change_directions(int direction);
 static void eat_fruit(int x, int y);
@@ -53,6 +54,7 @@ int main(void)
 		if (!main_cycle())
 			break;
 	}
+	freelist(s);
 	screen_end();
 	return 0;
 }
@@ -148,6 +150,13 @@ static snake *reclist(snake *s, int i, snake *previous)
 		s = NULL;
 	}
 	return s;
+}
+
+static void freelist(snake *s)
+{
+	if (s->next)
+		freelist(s->next);
+	free(s);
 }
 
 static void fruit_gen(void)
