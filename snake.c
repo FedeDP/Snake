@@ -130,7 +130,7 @@ static void screen_end(struct state *program_state)
 	attron(COLOR_PAIR(rand()%6 + 1));
 	attron(A_BOLD);
 	if (program_state->lose)
-		mvprintw(program_state->rowtot / 2, (program_state->coltot - strlen("You program_state->scored %d points!")) / 2, "You program_state->scored %d points!", program_state->points);
+		mvprintw(program_state->rowtot / 2, (program_state->coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", program_state->points);
 	else
 		mvprintw(program_state->rowtot / 2, (program_state->coltot - strlen(exitmsg)) / 2, "%s", exitmsg);
 	refresh();
