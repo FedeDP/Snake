@@ -278,7 +278,7 @@ static void eat_fruit(int x, int y)
 {
 	points = points + 7;
 	s = snake_grow(x, y);
-	if (points != 7 * COLS * ROWS)
+	if (points != (7 * COLS * ROWS) - (STARTING_SIZE * 7))
 		fruit_gen();
 }
 
