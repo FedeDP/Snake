@@ -182,7 +182,11 @@ static void fruit_gen(struct state *ps)
 
 static void grid_init(struct state *ps)
 {
+	snake *temp = NULL;
 	ps->s = reclist(ps->s, 0, NULL, ps);
+	for (temp = ps->s; temp->next; temp = temp->next);
+	/* Circular list: first elem has a ptr to the last elem */
+	ps->s->previous = temp;
 	fruit_gen(ps);
 }
 
@@ -240,11 +244,8 @@ static void snake_move(struct state *ps)
 static void change_directions(int direction, struct state *ps)
 {
 	snake *temp = NULL;
-	temp = ps->s;
-	while (temp->next) {
-		temp = temp->next;
-	}
-	while (temp->previous != NULL) {
+	temp = ps->s->previous;
+	while (temp->previous != ps->s->previous) {
 		temp->direction = temp->previous->direction;
 		temp = temp->previous;
 	}
@@ -293,7 +294,7 @@ static void eat_fruit(int x, int y, struct state *ps)
 static snake *snake_grow(int x, int y, struct state *ps)
 {
 	snake *temp = NULL;
-	for (temp = ps->s; temp->next; temp = temp->next);
+	temp = ps->s->previous;
 	temp->next = malloc(sizeof(snake));
 	if (temp->next) {
 		temp->next->x = x;
@@ -305,6 +306,7 @@ static snake *snake_grow(int x, int y, struct state *ps)
 		mvwprintw(ps->field, temp->next->x + 1, temp->next->y + 1, "%c", ps->grid[temp->next->x][temp->next->y]);
 		wattroff(ps->field, COLOR_PAIR);
 		temp->next->next = NULL;
+		ps->s->previous = temp->next;
 	} else {
 		temp->next = NULL;
 	}
