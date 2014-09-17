@@ -64,7 +64,6 @@ int main(void)
 
 static int screen_init(struct state *ps)
 {
-	int i, k;
 	initscr();
 	start_color();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
@@ -85,9 +84,7 @@ static int screen_init(struct state *ps)
 		return 1;
 	}
 	/* print grid centered */
-	i = (ps->rowtot - 4 - ROWS - 2) / 2;
-	k = (ps->coltot - COLS - 2) / 2;
-	ps->field = subwin(stdscr, ROWS + 2, COLS + 2, i, k);
+	ps->field = subwin(stdscr, ROWS + 2, COLS + 2, (ps->rowtot - 6 - ROWS) / 2, (ps->coltot - COLS - 2) / 2);
 	ps->score = subwin(stdscr, 2 + 2, ps->coltot, ps->rowtot - 4, 0);
 	keypad(ps->field, TRUE);
 	wtimeout(ps->field, 30);
@@ -104,12 +101,10 @@ static int screen_init(struct state *ps)
 static void screen_end(struct state *ps)
 {
 	char exitmsg[] = "Leaving...bye! See you later :)";
-	wtimeout(stdscr, -1);
 	wclear(ps->field);
 	wclear(ps->score);
 	delwin(ps->field);
 	delwin(ps->score);
-	clear();
 	attron(COLOR_PAIR(rand()%6 + 1));
 	attron(A_BOLD);
 	if (ps->lose)
@@ -167,7 +162,7 @@ static void grid_init(struct state *ps)
 	snake *temp = NULL;
 	ps->s = reclist(ps->s, 0, NULL, ps);
 	for (temp = ps->s; temp->next; temp = temp->next);
-	/* Circular list: first elem has a ptr to the last elem */
+	/* Circular list: first elem has a ptr to last elem */
 	ps->s->previous = temp;
 	fruit_gen(ps);
 }
