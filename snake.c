@@ -43,6 +43,7 @@ static void eat_fruit(int x, int y, struct state *ps);
 static void snake_move(struct state *ps);
 static snake *snake_grow(int x, int y, struct state *ps);
 static int main_cycle(struct state *ps);
+static int size(snake *s);
 
 int main(void)
 {
@@ -146,11 +147,25 @@ static void freelist(snake *s)
 
 static void fruit_gen(struct state *ps)
 {
-	int i, k;
-	do {
-		i = rand()%ROWS;
-		k = rand()%COLS;
-	} while (ps->grid[i][k] == 'O');
+        int dim = (ROWS * COLS) - size(ps->s);
+        int fixed_grid[dim];
+        int i, k;
+        int j = 0;
+        if (dim == 0) {
+                ps->lose = 1;
+                return;
+        }
+        for (i = 0; i < ROWS; i++) {
+                for (k = 0; k < COLS; k++) {
+                        if (ps->grid[i][k] != 'O') {
+                                fixed_grid[j] = (i * COLS) + k;
+                                j++;
+                        }
+                }
+        }
+        j = rand() % dim;
+        i = fixed_grid[j] / COLS;
+        k = fixed_grid[j] - (i * COLS);
 	ps->grid[i][k] = '*';
 	wattron(ps->field, COLOR_PAIR(1));
 	mvwprintw(ps->field, i + 1, k + 1, "%c", ps->grid[i][k]);
@@ -263,8 +278,7 @@ static void eat_fruit(int x, int y, struct state *ps)
 {
 	ps->points = ps->points + 7;
 	ps->s = snake_grow(x, y, ps);
-	if (ps->points != (7 * COLS * ROWS) - (STARTING_SIZE * 7))
-		fruit_gen(ps);
+        fruit_gen(ps);
 }
 
 static snake *snake_grow(int x, int y, struct state *ps)
@@ -287,4 +301,13 @@ static snake *snake_grow(int x, int y, struct state *ps)
 		temp->next = NULL;
 	}
 	return ps->s;
+}
+
+static int size(snake *s)
+{
+        snake *temp = NULL;
+        int i = 0;
+	for (temp = s; temp->next; temp = temp->next)
+                i++;
+        return i;
 }
