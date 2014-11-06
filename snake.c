@@ -121,7 +121,7 @@ static void screen_end(struct state *ps)
 
 static snake *reclist(int i, snake *previous, struct state *ps)
 {
-	s = malloc(sizeof(snake));
+	snake *s = malloc(sizeof(snake));
 	if ((s) && (i != STARTING_SIZE)) {
 		s->x = ROWS/2;
 		s->y = COLS/2 - i;
