@@ -34,7 +34,7 @@ struct state {
 
 static int screen_init(struct state *ps);
 static void screen_end(struct state *ps);
-static snake *reclist(snake *s, int i, snake *previous, struct state *ps);
+static snake *reclist(int i, snake *previous, struct state *ps);
 static void freelist(snake *s);
 static void fruit_gen(struct state *ps);
 static void grid_init(struct state *ps);
@@ -119,7 +119,7 @@ static void screen_end(struct state *ps)
 	endwin();
 }
 
-static snake *reclist(snake *s, int i, snake *previous, struct state *ps)
+static snake *reclist(int i, snake *previous, struct state *ps)
 {
 	s = malloc(sizeof(snake));
 	if ((s) && (i != STARTING_SIZE)) {
