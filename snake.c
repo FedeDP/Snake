@@ -31,18 +31,12 @@ typedef struct list {
 
 } snake;
 
-struct fruit {
-	int x;
-	int y;
-};
-
 /* Program state struct */
 struct state {
 	int rowtot;
 	int coltot;
 	int points;
 	int lose;
-	struct fruit fruit;
 	snake *s;
 	WINDOW *field;
 	WINDOW *score;
