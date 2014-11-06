@@ -28,7 +28,6 @@ typedef struct list {
 	int direction;
 	struct list *next;
 	struct list *previous;
-
 } snake;
 
 /* Program state struct */
