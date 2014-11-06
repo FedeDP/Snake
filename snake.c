@@ -41,17 +41,17 @@ struct state {
 	WINDOW *score;
 };
 
-static int screen_init();
-static void screen_end();
+static int screen_init(void);
+static void screen_end(void);
 static snake *reclist(int i, snake *previous);
 static void freelist(snake *s);
-static void fruit_gen();
-static void grid_init();
+static void fruit_gen(void);
+static void grid_init(void);
 static void change_directions(int direction);
 static void eat_fruit(int x, int y);
-static void snake_move();
+static void snake_move(void);
 static snake *snake_grow(int x, int y);
-static int main_cycle();
+static int main_cycle(void);
 static int size(snake *s);
 
 static struct state ps;
