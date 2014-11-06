@@ -151,7 +151,6 @@ static void freelist(snake *s)
 	if (s->next)
 		freelist(s->next);
 	free(s);
-	printf("Freed\n");
 }
 
 static void fruit_gen(struct state *ps)
