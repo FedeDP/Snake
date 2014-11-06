@@ -40,7 +40,6 @@ struct state {
 	int coltot;
 	int points;
 	int lose;
-	char grid[ROWS][COLS];
 	struct fruit fruit;
 	snake *s;
 	WINDOW *field;
@@ -142,9 +141,8 @@ static snake *reclist(int i, snake *previous)
 		s->x = ROWS/2;
 		s->y = COLS/2 - i;
 		s->direction = RIGHT;
-		ps.grid[s->x][s->y] = 'O';
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, s->x + 1, s->y + 1, "%c", ps.grid[s->x][s->y]);
+		mvwprintw(ps.field, s->x + 1, s->y + 1, "O");
 		wattroff(ps.field, COLOR_PAIR);
 		s->previous = previous;
 		s->next = reclist(i + 1, s);
@@ -173,8 +171,7 @@ static void fruit_gen(void)
 	}
 	for (i = 0; i < ROWS; i++) {
 		for (k = 0; k < COLS; k++) {
-			if (ps.grid[i][k] != 'O') {
-			//if(mvwgetch(ps.field, i + 1, k + 1) != 'O') {
+			if((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) != 'O') {
 				fixed_grid[j] = (i * COLS) + k;
 				j++;
 			}
@@ -183,9 +180,8 @@ static void fruit_gen(void)
 	j = rand() % dim;
 	i = fixed_grid[j] / COLS;
 	k = fixed_grid[j] - (i * COLS);
-	ps.grid[i][k] = '*';
 	wattron(ps.field, COLOR_PAIR(1));
-	mvwprintw(ps.field, i + 1, k + 1, "%c", ps.grid[i][k]);
+	mvwprintw(ps.field, i + 1, k + 1, "*");
 	wattroff(ps.field, COLOR_PAIR);
 }
 
@@ -204,8 +200,7 @@ static void snake_move(void)
 	int i, k, eat = 0;
 	snake *temp = NULL;
 	for (temp = ps.s; temp; temp = temp->next) {
-		ps.grid[temp->x][temp->y] = ' ';
-		mvwprintw(ps.field, temp->x + 1, temp->y + 1, "%c", ps.grid[temp->x][temp->y]);
+		mvwprintw(ps.field, temp->x + 1, temp->y + 1, " ");
 		if ((eat) && (!temp->next)) {
 			i = temp->x;
 			k = temp->y;
@@ -232,15 +227,14 @@ static void snake_move(void)
 					temp->x = 0;
 				break;
 		}
-		if ((temp == ps.s) && (ps.grid[temp->x][temp->y] == '*'))
+		if ((temp == ps.s) && (mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == '*')
 			eat = 1;
-		if (ps.grid[temp->x][temp->y] == 'O') {
+		if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == 'O') {
 			ps.lose = 1;
 			return;
 		}
-		ps.grid[temp->x][temp->y] = 'O';
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, temp->x + 1, temp->y + 1, "%c", ps.grid[temp->x][temp->y]);
+		mvwprintw(ps.field, temp->x + 1, temp->y + 1, "O");
 		wattroff(ps.field, COLOR_PAIR);
 	}
 	if (eat) {
@@ -308,9 +302,8 @@ static snake *snake_grow(int x, int y)
 		temp->next->y = y;
 		temp->next->previous = temp;
 		temp->next->direction = temp->direction;
-		ps.grid[temp->next->x][temp->next->y] = 'O';
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, temp->next->x + 1, temp->next->y + 1, "%c", ps.grid[temp->next->x][temp->next->y]);
+		mvwprintw(ps.field, temp->next->x + 1, temp->next->y + 1, "O");
 		wattroff(ps.field, COLOR_PAIR);
 		temp->next->next = NULL;
 		ps.s->previous = temp->next;
