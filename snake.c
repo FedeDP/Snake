@@ -174,6 +174,7 @@ static void fruit_gen(void)
 	for (i = 0; i < ROWS; i++) {
 		for (k = 0; k < COLS; k++) {
 			if (ps.grid[i][k] != 'O') {
+			//if(mvwgetch(ps.field, i + 1, k + 1) != 'O') {
 				fixed_grid[j] = (i * COLS) + k;
 				j++;
 			}
@@ -258,7 +259,7 @@ static void change_directions(int direction)
 		temp = temp->previous;
 	}
 	ps.s->direction = direction;
-	snake_move(ps);
+	snake_move();
 }
 
 static int main_cycle(void)
@@ -294,7 +295,7 @@ static void eat_fruit(int x, int y)
 {
 	ps.points = ps.points + 7;
 	ps.s = snake_grow(x, y);
-	fruit_gen(ps);
+	fruit_gen();
 }
 
 static snake *snake_grow(int x, int y)
