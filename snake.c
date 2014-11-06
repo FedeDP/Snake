@@ -19,6 +19,8 @@
 #define LEFT 1
 #define UP 2
 #define DOWN 3
+#define SNAKE_CHAR "O"
+#define FRUIT_CHAR "*"
 
 typedef struct list {
 	int x;
@@ -142,7 +144,7 @@ static snake *reclist(int i, snake *previous)
 		s->y = COLS/2 - i;
 		s->direction = RIGHT;
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, s->x + 1, s->y + 1, "O");
+		mvwprintw(ps.field, s->x + 1, s->y + 1, SNAKE_CHAR);
 		wattroff(ps.field, COLOR_PAIR);
 		s->previous = previous;
 		s->next = reclist(i + 1, s);
@@ -171,7 +173,7 @@ static void fruit_gen(void)
 	}
 	for (i = 0; i < ROWS; i++) {
 		for (k = 0; k < COLS; k++) {
-			if((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) != 'O') {
+			if((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) != *SNAKE_CHAR) {
 				fixed_grid[j] = (i * COLS) + k;
 				j++;
 			}
@@ -181,7 +183,7 @@ static void fruit_gen(void)
 	i = fixed_grid[j] / COLS;
 	k = fixed_grid[j] - (i * COLS);
 	wattron(ps.field, COLOR_PAIR(1));
-	mvwprintw(ps.field, i + 1, k + 1, "*");
+	mvwprintw(ps.field, i + 1, k + 1, FRUIT_CHAR);
 	wattroff(ps.field, COLOR_PAIR);
 }
 
@@ -227,14 +229,14 @@ static void snake_move(void)
 					temp->x = 0;
 				break;
 		}
-		if ((temp == ps.s) && (mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == '*')
+		if ((temp == ps.s) && (mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *FRUIT_CHAR)
 			eat = 1;
-		if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == 'O') {
+		if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
 			ps.lose = 1;
 			return;
 		}
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, temp->x + 1, temp->y + 1, "O");
+		mvwprintw(ps.field, temp->x + 1, temp->y + 1, SNAKE_CHAR);
 		wattroff(ps.field, COLOR_PAIR);
 	}
 	if (eat) {
@@ -303,7 +305,7 @@ static snake *snake_grow(int x, int y)
 		temp->next->previous = temp;
 		temp->next->direction = temp->direction;
 		wattron(ps.field, COLOR_PAIR(2));
-		mvwprintw(ps.field, temp->next->x + 1, temp->next->y + 1, "O");
+		mvwprintw(ps.field, temp->next->x + 1, temp->next->y + 1, SNAKE_CHAR);
 		wattroff(ps.field, COLOR_PAIR);
 		temp->next->next = NULL;
 		ps.s->previous = temp->next;
