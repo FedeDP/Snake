@@ -222,11 +222,13 @@ static void snake_move(void)
 					temp->x = 0;
 				break;
 		}
-		if ((temp == ps.s) && (mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *FRUIT_CHAR)
-			eat = 1;
-		if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
-			ps.lose = 1;
-			return;
+		if (temp == ps.s) {
+			if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *FRUIT_CHAR)
+				eat = 1;
+			if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
+				ps.lose = 1;
+				return;
+			}
 		}
 		wattron(ps.field, COLOR_PAIR(2));
 		mvwprintw(ps.field, temp->x + 1, temp->y + 1, SNAKE_CHAR);
