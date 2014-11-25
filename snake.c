@@ -7,10 +7,14 @@
 #define ROWS 30
 #define COLS 120
 #define STARTING_SIZE 3
-#define RIGHT 0
-#define LEFT 1
-#define UP 2
-#define DOWN 3
+
+/* eigenvectors associated to snake movements */
+#define RIGHT 10
+#define LEFT -10
+#define UP -1
+#define DOWN 1
+
+/* chars to be printed */
 #define SNAKE_CHAR "O"
 #define FRUIT_CHAR "*"
 
@@ -192,28 +196,8 @@ static void snake_move(void)
 			i = temp->x;
 			k = temp->y;
 		}
-		switch (temp->direction) {
-			case RIGHT:
-				temp->y++;
-				if (temp->y == COLS)
-					temp->y = 0;
-				break;
-			case LEFT:
-				temp->y--;
-				if (temp->y == -1)
-					temp->y = COLS - 1;
-				break;
-			case UP:
-				temp->x--;
-				if (temp->x == -1)
-					temp->x = ROWS - 1;
-				break;
-			case DOWN:
-				temp->x++;
-				if (temp->x == ROWS)
-					temp->x = 0;
-				break;
-		}
+		temp->x = ((temp->x + temp->direction % 10) + ROWS) % ROWS;
+		temp->y = ((temp->y + temp->direction / 10) + COLS) % COLS;
 		if (temp == ps.s) {
 			if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *FRUIT_CHAR)
 				eat = 1;
