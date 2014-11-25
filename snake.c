@@ -43,7 +43,7 @@ static snake *reclist(int i, snake *previous);
 static void freelist(snake *s);
 static void fruit_gen(void);
 static void grid_init(void);
-static void change_directions(int direction);
+static void change_directions(void);
 static void eat_fruit(int x, int y);
 static void snake_move(void);
 static snake *snake_grow(int x, int y);
@@ -162,7 +162,7 @@ static void fruit_gen(void)
 	}
 	for (i = 0; i < ROWS; i++) {
 		for (k = 0; k < COLS; k++) {
-			if((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) != *SNAKE_CHAR) {
+			if ((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) != *SNAKE_CHAR) {
 				fixed_grid[j] = (i * COLS) + k;
 				j++;
 			}
@@ -217,44 +217,42 @@ static void snake_move(void)
 	}
 }
 
-static void change_directions(int direction)
+static void change_directions(void)
 {
 	snake *temp = NULL;
 	temp = ps.s->previous;
-	while (temp->previous != ps.s->previous) {
+	while (temp != ps.s) {
 		temp->direction = temp->previous->direction;
 		temp = temp->previous;
 	}
-	ps.s->direction = direction;
-	snake_move();
 }
 
 static int main_cycle(void)
 {
-	int direction = ps.s->direction;
 	wmove(ps.field, ps.s->x + 1, ps.s->y + 1);
 	wrefresh(ps.field);
+	change_directions();
 	switch (wgetch(ps.field)) {
 		case KEY_LEFT:
-			if (direction != RIGHT)
-				direction = LEFT;
+			if (ps.s->direction != RIGHT)
+				ps.s->direction = LEFT;
 			break;
 		case KEY_RIGHT:
-			if (direction != LEFT)
-				direction = RIGHT;
+			if (ps.s->direction != LEFT)
+				ps.s->direction = RIGHT;
 			break;
 		case KEY_UP:
-			if (direction != DOWN)
-				direction = UP;
+			if (ps.s->direction != DOWN)
+				ps.s->direction = UP;
 			break;
 		case KEY_DOWN:
-			if (direction != UP)
-				direction = DOWN;
+			if (ps.s->direction != UP)
+				ps.s->direction = DOWN;
 			break;
 		case KEY_F(2): /* f2 to exit */
 			return 0;
 	}
-	change_directions(direction);
+	snake_move();
 	return 1;
 }
 
