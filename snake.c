@@ -99,11 +99,12 @@ static int screen_init(void)
     wborder(ps.field, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(ps.score, '|', '|', '-', '-', '+', '+', '+', '+');
     wattroff(ps.field, COLOR_PAIR);
-    wattroff(ps.score, COLOR_PAIR);
     mvwprintw(ps.score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
-    mvwprintw(ps.score, 1, 1, "%d points.", ps.points);
+    mvwprintw(ps.score, 1, 1, "Points: %d", ps.points);
+    wattron(ps.field, A_BOLD);
+    wattron(ps.score, A_BOLD);
     colored_print(ps.field, -1, -1, "Snake", 4);
-    colored_print(ps.score, -1, -1, "Score", 3);
+    mvwprintw(ps.score, 0, 0, "Score");
     wrefresh(ps.score);
     return 0;
 }
@@ -115,7 +116,7 @@ static void screen_end(void)
     wclear(ps.score);
     delwin(ps.field);
     delwin(ps.score);
-    attron(COLOR_PAIR(rand()%6 + 1));
+    attron(COLOR_PAIR(rand()%4 + 1));
     attron(A_BOLD);
     if (ps.lose)
         mvprintw(ps.rowtot / 2, (ps.coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", ps.points);
@@ -209,9 +210,7 @@ static void snake_move(void)
     }
     if (eat) {
         eat_fruit(i, k);
-        wattron(ps.score, COLOR_PAIR(3));
-        mvwprintw(ps.score, 1, 1, "%d points.", ps.points);
-        wattroff(ps.score, COLOR_PAIR);
+        mvwprintw(ps.score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(ps.score);
     }
 }
