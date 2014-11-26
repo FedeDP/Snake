@@ -49,6 +49,7 @@ static void snake_move(void);
 static snake *snake_grow(int x, int y);
 static int main_cycle(void);
 static int size(snake *s);
+static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 
 static struct state ps;
 
@@ -76,9 +77,7 @@ static int screen_init(void)
     init_pair(1, COLOR_RED, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
     init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);
-    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(6, COLOR_CYAN, COLOR_BLACK);
+    init_pair(4, COLOR_CYAN, COLOR_BLACK);
     raw();
     noecho();
     getmaxyx(stdscr, ps.rowtot, ps.coltot);
@@ -95,12 +94,16 @@ static int screen_init(void)
     ps.score = subwin(stdscr, 2 + 2, ps.coltot, ps.rowtot - 4, 0);
     keypad(ps.field, TRUE);
     wtimeout(ps.field, 30);
+    wattron(ps.field, COLOR_PAIR(4));
+    wattron(ps.score, COLOR_PAIR(3));
     wborder(ps.field, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(ps.score, '|', '|', '-', '-', '+', '+', '+', '+');
+    wattroff(ps.field, COLOR_PAIR);
+    wattroff(ps.score, COLOR_PAIR);
     mvwprintw(ps.score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
     mvwprintw(ps.score, 1, 1, "%d points.", ps.points);
-    mvwprintw(ps.field, 0, 0, "Snake");
-    mvwprintw(ps.score, 0, 0, "Score");
+    colored_print(ps.field, -1, -1, "Snake", 4);
+    colored_print(ps.score, -1, -1, "Score", 3);
     wrefresh(ps.score);
     return 0;
 }
@@ -132,9 +135,7 @@ static snake *reclist(int i, snake *previous)
         s->x = ROWS/2;
         s->y = COLS/2 - i;
         s->direction = RIGHT;
-        wattron(ps.field, COLOR_PAIR(2));
-        mvwprintw(ps.field, s->x + 1, s->y + 1, SNAKE_CHAR);
-        wattroff(ps.field, COLOR_PAIR);
+        colored_print(ps.field, s->x, s->y, SNAKE_CHAR, 2);
         s->previous = previous;
         s->next = reclist(i + 1, s);
     } else {
@@ -171,9 +172,7 @@ static void fruit_gen(void)
     j = rand() % dim;
     i = fixed_grid[j] / COLS;
     k = fixed_grid[j] - (i * COLS);
-    wattron(ps.field, COLOR_PAIR(1));
-    mvwprintw(ps.field, i + 1, k + 1, FRUIT_CHAR);
-    wattroff(ps.field, COLOR_PAIR);
+    colored_print(ps.field, i, k, FRUIT_CHAR, 1);
 }
 
 static void grid_init(void)
@@ -206,13 +205,13 @@ static void snake_move(void)
                 return;
             }
         }
-        wattron(ps.field, COLOR_PAIR(2));
-        mvwprintw(ps.field, temp->x + 1, temp->y + 1, SNAKE_CHAR);
-        wattroff(ps.field, COLOR_PAIR);
+        colored_print(ps.field, temp->x, temp->y, SNAKE_CHAR, 2);
     }
     if (eat) {
         eat_fruit(i, k);
+        wattron(ps.score, COLOR_PAIR(3));
         mvwprintw(ps.score, 1, 1, "%d points.", ps.points);
+        wattroff(ps.score, COLOR_PAIR);
         wrefresh(ps.score);
     }
 }
@@ -273,9 +272,7 @@ static snake *snake_grow(int x, int y)
         temp->next->y = y;
         temp->next->previous = temp;
         temp->next->direction = temp->direction;
-        wattron(ps.field, COLOR_PAIR(2));
-        mvwprintw(ps.field, temp->next->x + 1, temp->next->y + 1, SNAKE_CHAR);
-        wattroff(ps.field, COLOR_PAIR);
+        colored_print(ps.field, temp->next->x, temp->next->y, SNAKE_CHAR, 2);
         temp->next->next = NULL;
         ps.s->previous = temp->next;
     } else {
@@ -291,4 +288,11 @@ static int size(snake *s)
     for (temp = s; temp->next; temp = temp->next)
         i++;
     return i;
+}
+
+static void colored_print(WINDOW *win, int x, int y, char *c, int color)
+{
+    wattron(win, COLOR_PAIR(color));
+    mvwprintw(win, x + 1, y + 1, c);
+    wattroff(win, COLOR_PAIR);
 }
