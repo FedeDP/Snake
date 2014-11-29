@@ -33,6 +33,7 @@ struct point {
 /* Program state struct */
 struct state {
     int points;
+    int size;
     snake *s;
     struct point snake_head;
     struct point snake_tail;
@@ -49,10 +50,10 @@ static void eat_fruit(void);
 static void snake_move(void);
 static snake *snake_grow(void);
 static int main_cycle(void);
-static int size(snake *s);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 
 static struct state ps = {
+    .size = STARTING_SIZE,
     .snake_head = {ROWS/2, COLS/2},
     .snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)}
 };
@@ -161,7 +162,7 @@ static void freelist(snake *s)
 
 static void fruit_gen(void)
 {
-    int dim = (ROWS * COLS) - size(ps.s);
+    int dim = (ROWS * COLS) - ps.size;
     int fixed_grid[dim];
     int i, k;
     int j = 0;
@@ -214,6 +215,7 @@ static void snake_move(void)
         ps.snake_tail.y = ((ps.snake_tail.y + ps.s->previous->direction / 10) + COLS) % COLS;
     } else {
         eat_fruit();
+        ps.size++;
         mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(score);
     }
@@ -278,15 +280,6 @@ static snake *snake_grow(void)
         temp->next = NULL;
     }
     return ps.s;
-}
-
-static int size(snake *s)
-{
-    snake *temp = NULL;
-    int i = 0;
-    for (temp = s; temp->next; temp = temp->next)
-        i++;
-    return i;
 }
 
 static void colored_print(WINDOW *win, int x, int y, char *c, int color)
