@@ -189,23 +189,24 @@ static void grid_init(void)
 static void snake_move(void)
 {
     int i, k, eat = 0;
-    snake *temp = NULL;
-    for (temp = ps.s; temp; temp = temp->next) {
+    snake *temp = ps.s;
+    i = ((temp->x + temp->direction % 10) + ROWS) % ROWS;
+    k = ((temp->y + temp->direction / 10) + COLS) % COLS;
+    if ((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
+            ps.lose = 1;
+            return;
+    } else {
+        if ((mvwinch(ps.field, i+ 1, k + 1) & A_CHARTEXT) == *FRUIT_CHAR)
+            eat = 1;
+    }
+    for (; temp; temp = temp->next) {
         mvwprintw(ps.field, temp->x + 1, temp->y + 1, " ");
-        if ((eat) && (!temp->next)) {
+        if ((!temp->next) && (eat)) {
             i = temp->x;
             k = temp->y;
         }
         temp->x = ((temp->x + temp->direction % 10) + ROWS) % ROWS;
         temp->y = ((temp->y + temp->direction / 10) + COLS) % COLS;
-        if (temp == ps.s) {
-            if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *FRUIT_CHAR)
-                eat = 1;
-            if ((mvwinch(ps.field, temp->x + 1, temp->y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
-                ps.lose = 1;
-                return;
-            }
-        }
         colored_print(ps.field, temp->x, temp->y, SNAKE_CHAR, 2);
     }
     if (eat) {
