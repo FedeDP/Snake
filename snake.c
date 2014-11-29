@@ -189,27 +189,25 @@ static void grid_init(void)
 static void snake_move(void)
 {
     int i, k, eat = 0;
-    snake *temp = ps.s;
-    i = ((temp->x + temp->direction % 10) + ROWS) % ROWS;
-    k = ((temp->y + temp->direction / 10) + COLS) % COLS;
-    if ((mvwinch(ps.field, i + 1, k + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
+    char c;
+    ps.s->x = ((ps.s->x + ps.s->direction % 10) + ROWS) % ROWS;
+    ps.s->y = ((ps.s->y + ps.s->direction / 10) + COLS) % COLS;
+    c = (mvwinch(ps.field, ps.s->x + 1, ps.s->y + 1) & A_CHARTEXT);
+    if (c == *SNAKE_CHAR) {
             ps.lose = 1;
             return;
     } else {
-        if ((mvwinch(ps.field, i+ 1, k + 1) & A_CHARTEXT) == *FRUIT_CHAR)
+        if (c == *FRUIT_CHAR)
             eat = 1;
     }
-    for (; temp; temp = temp->next) {
-        mvwprintw(ps.field, temp->x + 1, temp->y + 1, " ");
-        if ((!temp->next) && (eat)) {
-            i = temp->x;
-            k = temp->y;
-        }
-        temp->x = ((temp->x + temp->direction % 10) + ROWS) % ROWS;
-        temp->y = ((temp->y + temp->direction / 10) + COLS) % COLS;
-        colored_print(ps.field, temp->x, temp->y, SNAKE_CHAR, 2);
-    }
-    if (eat) {
+    colored_print(ps.field, ps.s->x, ps.s->y, SNAKE_CHAR, 2);
+    i = ps.s->previous->x;
+    k = ps.s->previous->y;
+    ps.s->previous->x = ((ps.s->previous->x + ps.s->previous->direction % 10) + ROWS) % ROWS;
+    ps.s->previous->y = ((ps.s->previous->y + ps.s->previous->direction / 10) + COLS) % COLS;
+    if (!eat)
+        mvwprintw(ps.field, i + 1, k + 1, " ");
+    else {
         eat_fruit(i, k);
         mvwprintw(ps.score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(ps.score);
@@ -272,7 +270,6 @@ static snake *snake_grow(int x, int y)
         temp->next->y = y;
         temp->next->previous = temp;
         temp->next->direction = temp->direction;
-        colored_print(ps.field, temp->next->x, temp->next->y, SNAKE_CHAR, 2);
         temp->next->next = NULL;
         ps.s->previous = temp->next;
     } else {
