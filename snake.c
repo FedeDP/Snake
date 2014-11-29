@@ -47,15 +47,16 @@ static void freelist(snake *s);
 static void fruit_gen(void);
 static void grid_init(void);
 static void change_directions(void);
-static void eat_fruit();
+static void eat_fruit(void);
 static void snake_move(void);
-static snake *snake_grow();
+static snake *snake_grow(void);
 static int main_cycle(void);
 static int size(snake *s);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 
 static struct state ps;
-static struct point snake_head, snake_tail;
+static struct point snake_head = {ROWS/2, COLS/2};
+static struct point snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)};
 
 int main(void)
 {
@@ -137,18 +138,6 @@ static snake *reclist(int i, snake *previous)
 {
     snake *s = malloc(sizeof(snake));
     if ((s) && (i != STARTING_SIZE)) {
-        switch (i) {
-        case 0:
-            snake_head.x = ROWS/2;
-            snake_head.y = COLS/2;
-            break;
-        case STARTING_SIZE - 1:
-            snake_tail.x = ROWS/2;
-            snake_tail.y = COLS/2 - i;
-            break;
-        default:
-            break;
-        }
         s->direction = RIGHT;
         colored_print(ps.field, snake_head.x, snake_head.y - i, SNAKE_CHAR, 2);
         s->previous = previous;
@@ -274,8 +263,7 @@ static void eat_fruit(void)
 
 static snake *snake_grow(void)
 {
-    snake *temp = NULL;
-    temp = ps.s->previous;
+    snake *temp = ps.s->previous;
     temp->next = malloc(sizeof(snake));
     if (temp->next) {
         temp->next->previous = temp;
