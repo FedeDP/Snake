@@ -33,7 +33,6 @@ struct point {
 /* Program state struct */
 struct state {
     int points;
-    int lose;
     snake *s;
     struct point snake_head;
     struct point snake_tail;
@@ -60,17 +59,18 @@ static struct state ps = {
 
 static WINDOW *field;
 static WINDOW *score;
+static int lose;
 
 int main(void)
 {
     int rowtot, coltot;
-    ps.lose = 0;
+    lose = 0;
     ps.points = 0;
     srand(time(NULL));
     if (screen_init(&rowtot, &coltot))
         return 1;
     grid_init();
-    while (!ps.lose) {
+    while (!lose) {
         if (!main_cycle())
             break;
     }
@@ -127,7 +127,7 @@ static void screen_end(int rowtot, int coltot)
     delwin(score);
     attron(COLOR_PAIR(rand()%4 + 1));
     attron(A_BOLD);
-    if (ps.lose)
+    if (lose)
         mvprintw(rowtot / 2, (coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", ps.points);
     else
         mvprintw(rowtot / 2, (coltot - strlen(exitmsg)) / 2, "%s", exitmsg);
@@ -166,7 +166,7 @@ static void fruit_gen(void)
     int i, k;
     int j = 0;
     if (dim == 0) {
-        ps.lose = 1;
+        lose = 1;
         return;
     }
     for (i = 0; i < ROWS; i++) {
@@ -201,7 +201,7 @@ static void snake_move(void)
     ps.snake_head.y = ((ps.snake_head.y + ps.s->direction / 10) + COLS) % COLS;
     c = (mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT);
     if (c == *SNAKE_CHAR) {
-            ps.lose = 1;
+            lose = 1;
             return;
     } else {
         if (c == *FRUIT_CHAR)
