@@ -19,8 +19,6 @@
 #define FRUIT_CHAR "*"
 
 typedef struct list {
-    int x;
-    int y;
     int direction;
     struct list *next;
     struct list *previous;
@@ -37,6 +35,11 @@ struct state {
     WINDOW *score;
 };
 
+struct point {
+    int x;
+    int y;
+};
+
 static int screen_init(void);
 static void screen_end(void);
 static snake *reclist(int i, snake *previous);
@@ -44,14 +47,15 @@ static void freelist(snake *s);
 static void fruit_gen(void);
 static void grid_init(void);
 static void change_directions(void);
-static void eat_fruit(int x, int y);
+static void eat_fruit();
 static void snake_move(void);
-static snake *snake_grow(int x, int y);
+static snake *snake_grow();
 static int main_cycle(void);
 static int size(snake *s);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 
 static struct state ps;
+static struct point snake_head, snake_tail;
 
 int main(void)
 {
@@ -133,10 +137,20 @@ static snake *reclist(int i, snake *previous)
 {
     snake *s = malloc(sizeof(snake));
     if ((s) && (i != STARTING_SIZE)) {
-        s->x = ROWS/2;
-        s->y = COLS/2 - i;
+        switch (i) {
+        case 0:
+            snake_head.x = ROWS/2;
+            snake_head.y = COLS/2;
+            break;
+        case STARTING_SIZE - 1:
+            snake_tail.x = ROWS/2;
+            snake_tail.y = COLS/2 - i;
+            break;
+        default:
+            break;
+        }
         s->direction = RIGHT;
-        colored_print(ps.field, s->x, s->y, SNAKE_CHAR, 2);
+        colored_print(ps.field, snake_head.x, snake_head.y - i, SNAKE_CHAR, 2);
         s->previous = previous;
         s->next = reclist(i + 1, s);
     } else {
@@ -188,11 +202,11 @@ static void grid_init(void)
 
 static void snake_move(void)
 {
-    int i, k, eat = 0;
+    int eat = 0;
     char c;
-    ps.s->x = ((ps.s->x + ps.s->direction % 10) + ROWS) % ROWS;
-    ps.s->y = ((ps.s->y + ps.s->direction / 10) + COLS) % COLS;
-    c = (mvwinch(ps.field, ps.s->x + 1, ps.s->y + 1) & A_CHARTEXT);
+    snake_head.x = ((snake_head.x + ps.s->direction % 10) + ROWS) % ROWS;
+    snake_head.y = ((snake_head.y + ps.s->direction / 10) + COLS) % COLS;
+    c = (mvwinch(ps.field, snake_head.x + 1, snake_head.y + 1) & A_CHARTEXT);
     if (c == *SNAKE_CHAR) {
             ps.lose = 1;
             return;
@@ -200,15 +214,13 @@ static void snake_move(void)
         if (c == *FRUIT_CHAR)
             eat = 1;
     }
-    colored_print(ps.field, ps.s->x, ps.s->y, SNAKE_CHAR, 2);
-    i = ps.s->previous->x;
-    k = ps.s->previous->y;
-    ps.s->previous->x = ((ps.s->previous->x + ps.s->previous->direction % 10) + ROWS) % ROWS;
-    ps.s->previous->y = ((ps.s->previous->y + ps.s->previous->direction / 10) + COLS) % COLS;
-    if (!eat)
-        mvwprintw(ps.field, i + 1, k + 1, " ");
-    else {
-        eat_fruit(i, k);
+    colored_print(ps.field, snake_head.x, snake_head.y, SNAKE_CHAR, 2);
+    if (!eat) {
+        mvwprintw(ps.field, snake_tail.x + 1,  snake_tail.y + 1, " ");
+        snake_tail.x = ((snake_tail.x + ps.s->previous->direction % 10) + ROWS) % ROWS;
+        snake_tail.y = ((snake_tail.y + ps.s->previous->direction / 10) + COLS) % COLS;
+    } else {
+        eat_fruit();
         mvwprintw(ps.score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(ps.score);
     }
@@ -226,7 +238,7 @@ static void change_directions(void)
 
 static int main_cycle(void)
 {
-    wmove(ps.field, ps.s->x + 1, ps.s->y + 1);
+    wmove(ps.field, snake_head.x + 1, snake_head.y + 1);
     wrefresh(ps.field);
     change_directions();
     switch (wgetch(ps.field)) {
@@ -253,21 +265,19 @@ static int main_cycle(void)
     return 1;
 }
 
-static void eat_fruit(int x, int y)
+static void eat_fruit(void)
 {
     ps.points = ps.points + 7;
-    ps.s = snake_grow(x, y);
+    ps.s = snake_grow();
     fruit_gen();
 }
 
-static snake *snake_grow(int x, int y)
+static snake *snake_grow(void)
 {
     snake *temp = NULL;
     temp = ps.s->previous;
     temp->next = malloc(sizeof(snake));
     if (temp->next) {
-        temp->next->x = x;
-        temp->next->y = y;
         temp->next->previous = temp;
         temp->next->direction = temp->direction;
         temp->next->next = NULL;
