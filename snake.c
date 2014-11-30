@@ -119,7 +119,7 @@ static int screen_init(int *rowtot, int *coltot)
     wborder(field, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
     wattroff(field, COLOR_PAIR);
-    mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move. F1 to save current game and leave.");
+    mvwprintw(score, 2, 1, "q anytime to *rage* quit. Arrow keys to move. s to save current game and leave.");
     mvwprintw(score, 1, 1, "Points: %d", ps.points);
     wattron(field, A_BOLD);
     wattron(score, A_BOLD);
@@ -270,10 +270,10 @@ static int main_cycle(void)
         if (ps.s->direction != UP)
             ps.s->direction = DOWN;
         break;
-    case KEY_F(1): /* f1 to store current game and exit */
+    case 's': /* "s" to store current game and exit */
         store_and_exit();
         return 0;
-    case KEY_F(2): /* f2 to exit */
+    case 'q': /* q to exit */
         return 0;
     }
     snake_move();
@@ -361,8 +361,6 @@ static void store_and_exit(void)
 {
     FILE *f = NULL;
     snake *temp = NULL;
-    if(access(path, F_OK) != -1)
-        remove(path);
     if ((f = fopen(path, "w"))) {
         fprintf(f, "%d\n", ps.points);
         fprintf(f, "%d\n", ps.size);
