@@ -62,11 +62,12 @@ static struct state ps;
 static WINDOW *field;
 static WINDOW *score;
 static int lose = 0;
+static int resume;
 static char *path;
 
 int main(void)
 {
-    int rowtot, coltot, resume;
+    int rowtot, coltot;
     int *initial_directions = NULL;
     path = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     do {
@@ -315,19 +316,17 @@ static int *resume_func(void)
     int *initial_directions = NULL;
     int i = 0;
     if ((f = fopen(path, "r"))) {
-        fscanf(f, "%d", &ps.points);
-        fscanf(f, "%d", &ps.size);
-        fscanf(f, "%d", &ps.fruit_coord.x);
-        fscanf(f, "%d", &ps.fruit_coord.y);
-        fscanf(f, "%d", &ps.snake_head.x);
-        fscanf(f, "%d", &ps.snake_head.y);
-        fscanf(f, "%d", &ps.snake_tail.x);
-        fscanf(f, "%d", &ps.snake_tail.y);
+        fscanf(f, "%d\n", &ps.points);
+        fscanf(f, "%d\n", &ps.size);
+        fscanf(f, "%d\n", &ps.fruit_coord.x);
+        fscanf(f, "%d\n", &ps.fruit_coord.y);
+        fscanf(f, "%d\n", &ps.snake_head.x);
+        fscanf(f, "%d\n", &ps.snake_head.y);
+        fscanf(f, "%d\n", &ps.snake_tail.x);
+        fscanf(f, "%d\n", &ps.snake_tail.y);
         initial_directions = malloc(sizeof(int) * ps.size);
         while (i != ps.size) {
-            fscanf(f, "%d", &initial_directions[i]);
-            if (initial_directions[i] == 2)
-                initial_directions[i] = -1;
+            fscanf(f, "%i\n", &initial_directions[i]);
             i++;
         }
         fclose(f);
@@ -335,6 +334,7 @@ static int *resume_func(void)
     } else {
         printf("No previous games found. Starting a new match.");
         initial_directions = init_func();
+        resume = 0;
     }
     return initial_directions;
 }
@@ -371,7 +371,7 @@ static void store_and_exit(void)
         fprintf(f, "%d\n", ps.snake_tail.x);
         fprintf(f, "%d\n", ps.snake_tail.y);
         for (temp = ps.s; temp; temp = temp->next)
-            fprintf(f, "%d\n", temp->direction);
+            fprintf(f, "%i\n", temp->direction);
         fclose(f);
     } else {
         printf("cannot store\n");
