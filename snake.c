@@ -157,8 +157,8 @@ static snake *reclist(int i, snake *previous, int directions[], int x, int y)
         s->direction = directions[i];
         s->previous = previous;
         if (i != 0) {
-            x = ((x - (s->previous->direction % 10)) + ROWS) % ROWS;
-            y = ((y - (s->previous->direction / 10)) + COLS) % COLS;
+            x = ((x - (s->direction % 10)) + ROWS) % ROWS;
+            y = ((y - (s->direction / 10)) + COLS) % COLS;
         }
         colored_print(field, x, y, SNAKE_CHAR, 2);
         s->next = reclist(i + 1, s, directions, x, y);
@@ -251,9 +251,10 @@ static void change_directions(void)
 
 static int main_cycle(void)
 {
+    snake_move();
+    change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
     wrefresh(field);
-    change_directions();
     switch (wgetch(field)) {
     case KEY_LEFT:
         if (ps.s->direction != RIGHT)
@@ -277,7 +278,6 @@ static int main_cycle(void)
     case 'q': /* q to exit */
         return 0;
     }
-    snake_move();
     return 1;
 }
 
