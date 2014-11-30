@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ncurses.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #define ROWS 30
 #define COLS 120
@@ -37,40 +39,48 @@ struct state {
     snake *s;
     struct point snake_head;
     struct point snake_tail;
+    struct point fruit_coord;
 };
 
 static int screen_init(int *rowtot, int *coltot);
 static void screen_end(int rowtot, int coltot);
-static snake *reclist(int i, snake *previous);
+static snake *reclist(int i, snake *previous, int directions[], int x, int y);
 static void freelist(snake *s);
 static void fruit_gen(void);
-static void grid_init(void);
+static void grid_init(int initial_directions[], int resume);
 static void change_directions(void);
 static void eat_fruit(void);
 static void snake_move(void);
 static snake *snake_grow(void);
 static int main_cycle(void);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
+static int *resume_func(void);
+static int *init_func(void);
+static void store_and_exit(void);
 
-static struct state ps = {
-    .size = STARTING_SIZE,
-    .snake_head = {ROWS/2, COLS/2},
-    .snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)}
-};
-
+static struct state ps;
 static WINDOW *field;
 static WINDOW *score;
-static int lose;
+static int lose = 0;
+static char *path;
 
 int main(void)
 {
-    int rowtot, coltot;
-    lose = 0;
-    ps.points = 0;
+    int rowtot, coltot, resume;
+    int *initial_directions = NULL;
+    path = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
+    do {
+        printf("Do you want to play a new game[0] or resume[1] last game?\n");
+        scanf("%d", &resume);
+    } while (resume != 0 && resume != 1);
+    if (resume)
+        initial_directions = resume_func();
+    else
+        initial_directions = init_func();
     srand(time(NULL));
     if (screen_init(&rowtot, &coltot))
         return 1;
-    grid_init();
+    grid_init(initial_directions, resume);
     while (!lose) {
         if (!main_cycle())
             break;
@@ -109,7 +119,7 @@ static int screen_init(int *rowtot, int *coltot)
     wborder(field, '|', '|', '-', '-', '+', '+', '+', '+');
     wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
     wattroff(field, COLOR_PAIR);
-    mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move.");
+    mvwprintw(score, 2, 1, "F2 anytime to *rage* quit. Arrow keys to move. F1 to save current game and leave.");
     mvwprintw(score, 1, 1, "Points: %d", ps.points);
     wattron(field, A_BOLD);
     wattron(score, A_BOLD);
@@ -139,14 +149,18 @@ static void screen_end(int rowtot, int coltot)
     endwin();
 }
 
-static snake *reclist(int i, snake *previous)
+static snake *reclist(int i, snake *previous, int directions[], int x, int y)
 {
     snake *s = malloc(sizeof(snake));
-    if ((s) && (i != STARTING_SIZE)) {
-        s->direction = RIGHT;
-        colored_print(field, ps.snake_head.x, ps.snake_head.y - i, SNAKE_CHAR, 2);
+    if ((s) && (i != ps.size)) {
+        s->direction = directions[i];
         s->previous = previous;
-        s->next = reclist(i + 1, s);
+        if (i != 0) {
+            x = ((x - (s->previous->direction % 10)) + ROWS) % ROWS;
+            y = ((y - (s->previous->direction / 10)) + COLS) % COLS;
+        }
+        colored_print(field, x, y, SNAKE_CHAR, 2);
+        s->next = reclist(i + 1, s, directions, x, y);
     } else {
         s = NULL;
     }
@@ -179,19 +193,22 @@ static void fruit_gen(void)
         }
     }
     j = rand() % dim;
-    i = fixed_grid[j] / COLS;
-    k = fixed_grid[j] - (i * COLS);
-    colored_print(field, i, k, FRUIT_CHAR, 1);
+    ps.fruit_coord.x = fixed_grid[j] / COLS;
+    ps.fruit_coord.y = fixed_grid[j] - (ps.fruit_coord.x * COLS);
+    colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
-static void grid_init(void)
+static void grid_init(int initial_directions[], int resume)
 {
     snake *temp = NULL;
-    ps.s = reclist(0, NULL);
+    ps.s = reclist(0, NULL, initial_directions, ps.snake_head.x, ps.snake_head.y);
     for (temp = ps.s; temp->next; temp = temp->next);
     /* Circular list: first elem has a ptr to last elem */
     ps.s->previous = temp;
-    fruit_gen();
+    if (!resume)
+        fruit_gen();
+    else
+        colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
 static void snake_move(void)
@@ -237,24 +254,27 @@ static int main_cycle(void)
     wrefresh(field);
     change_directions();
     switch (wgetch(field)) {
-        case KEY_LEFT:
-            if (ps.s->direction != RIGHT)
-                ps.s->direction = LEFT;
-            break;
-        case KEY_RIGHT:
-            if (ps.s->direction != LEFT)
-                ps.s->direction = RIGHT;
-            break;
-        case KEY_UP:
-            if (ps.s->direction != DOWN)
-                ps.s->direction = UP;
-            break;
-        case KEY_DOWN:
-            if (ps.s->direction != UP)
-                ps.s->direction = DOWN;
-            break;
-        case KEY_F(2): /* f2 to exit */
-            return 0;
+    case KEY_LEFT:
+        if (ps.s->direction != RIGHT)
+            ps.s->direction = LEFT;
+        break;
+    case KEY_RIGHT:
+        if (ps.s->direction != LEFT)
+            ps.s->direction = RIGHT;
+        break;
+    case KEY_UP:
+        if (ps.s->direction != DOWN)
+            ps.s->direction = UP;
+        break;
+    case KEY_DOWN:
+        if (ps.s->direction != UP)
+            ps.s->direction = DOWN;
+        break;
+    case KEY_F(1): /* f1 to store current game and exit */
+        store_and_exit();
+        return 0;
+    case KEY_F(2): /* f2 to exit */
+        return 0;
     }
     snake_move();
     return 1;
@@ -287,4 +307,75 @@ static void colored_print(WINDOW *win, int x, int y, char *c, int color)
     wattron(win, COLOR_PAIR(color));
     mvwprintw(win, x + 1, y + 1, c);
     wattroff(win, COLOR_PAIR);
+}
+
+static int *resume_func(void)
+{
+    FILE *f = NULL;
+    int *initial_directions = NULL;
+    int i = 0;
+    if ((f = fopen(path, "r"))) {
+        fscanf(f, "%d", &ps.points);
+        fscanf(f, "%d", &ps.size);
+        fscanf(f, "%d", &ps.fruit_coord.x);
+        fscanf(f, "%d", &ps.fruit_coord.y);
+        fscanf(f, "%d", &ps.snake_head.x);
+        fscanf(f, "%d", &ps.snake_head.y);
+        fscanf(f, "%d", &ps.snake_tail.x);
+        fscanf(f, "%d", &ps.snake_tail.y);
+        initial_directions = malloc(sizeof(int) * ps.size);
+        while (i != ps.size) {
+            fscanf(f, "%d", &initial_directions[i]);
+            if (initial_directions[i] == 2)
+                initial_directions[i] = -1;
+            i++;
+        }
+        fclose(f);
+        remove(path);
+    } else {
+        printf("No previous games found. Starting a new match.");
+        initial_directions = init_func();
+    }
+    return initial_directions;
+}
+
+static int *init_func(void)
+{
+    int *initial_directions = NULL;
+    int i = 0;
+    ps.points = 0;
+    ps.size = STARTING_SIZE;
+    ps.snake_head.x = ROWS/2;
+    ps.snake_head.y = COLS/2;
+    ps.snake_tail.x = ROWS/2;
+    ps.snake_tail.y = COLS/2 - (STARTING_SIZE - 1);
+    initial_directions = malloc(sizeof(int) * ps.size);
+    while (i != ps.size) {
+        initial_directions[i] = RIGHT;
+        i++;
+    }
+    return initial_directions;
+}
+
+static void store_and_exit(void)
+{
+    FILE *f = NULL;
+    snake *temp = NULL;
+    if(access(path, F_OK) != -1)
+        remove(path);
+    if ((f = fopen(path, "w"))) {
+        fprintf(f, "%d\n", ps.points);
+        fprintf(f, "%d\n", ps.size);
+        fprintf(f, "%d\n", ps.fruit_coord.x);
+        fprintf(f, "%d\n", ps.fruit_coord.y);
+        fprintf(f, "%d\n", ps.snake_head.x);
+        fprintf(f, "%d\n", ps.snake_head.y);
+        fprintf(f, "%d\n", ps.snake_tail.x);
+        fprintf(f, "%d\n", ps.snake_tail.y);
+        for (temp = ps.s; temp; temp = temp->next)
+            fprintf(f, "%d\n", temp->direction);
+        fclose(f);
+    } else {
+        printf("cannot store\n");
+    }
 }
