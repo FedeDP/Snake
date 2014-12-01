@@ -54,7 +54,7 @@ static void snake_move(void);
 static snake *snake_grow(void);
 static int main_cycle(void);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
-static int *resume_func(void);
+static int *resume_func(int *resume);
 static int *init_func(void);
 static void store_and_exit(void);
 
@@ -62,12 +62,11 @@ static struct state ps;
 static WINDOW *field;
 static WINDOW *score;
 static int lose = 0;
-static int resume;
 static char *path;
 
 int main(void)
 {
-    int rowtot, coltot;
+    int rowtot, coltot, resume;
     int *initial_directions = NULL;
     path = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     do {
@@ -75,7 +74,7 @@ int main(void)
         scanf("%d", &resume);
     } while (resume != 0 && resume != 1);
     if (resume)
-        initial_directions = resume_func();
+        initial_directions = resume_func(&resume);
     else
         initial_directions = init_func();
     srand(time(NULL));
@@ -310,7 +309,7 @@ static void colored_print(WINDOW *win, int x, int y, char *c, int color)
     wattroff(win, COLOR_PAIR);
 }
 
-static int *resume_func(void)
+static int *resume_func(int *resume)
 {
     FILE *f = NULL;
     int *initial_directions = NULL;
@@ -332,9 +331,10 @@ static int *resume_func(void)
         fclose(f);
         remove(path);
     } else {
-        printf("No previous games found. Starting a new match.");
+        printf("No previous games found. Starting a new match.\n");
+        sleep(1);
         initial_directions = init_func();
-        resume = 0;
+        *resume = 0;
     }
     return initial_directions;
 }
@@ -374,6 +374,7 @@ static void store_and_exit(void)
             fprintf(f, "%i\n", temp->direction);
         fclose(f);
     } else {
-        printf("cannot store\n");
+        printf("Cannot store.\n");
+        sleep(1);
     }
 }
