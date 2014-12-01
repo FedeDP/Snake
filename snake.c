@@ -79,6 +79,7 @@ int main(void)
     if (screen_init(&rowtot, &coltot))
         return 1;
     grid_init(initial_directions, resume);
+    free(initial_directions);
     while (!lose) {
         if (!main_cycle(&lose))
             break;
