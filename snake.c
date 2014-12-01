@@ -43,30 +43,28 @@ struct state {
 };
 
 static int screen_init(int *rowtot, int *coltot);
-static void screen_end(int rowtot, int coltot);
+static void screen_end(int rowtot, int coltot, int lose);
 static snake *reclist(int i, snake *previous, int directions[], int x, int y);
 static void freelist(snake *s);
 static void fruit_gen(void);
 static void grid_init(int initial_directions[], int resume);
 static void change_directions(void);
 static void eat_fruit(void);
-static void snake_move(void);
+static void snake_move(int *lose);
 static snake *snake_grow(void);
-static int main_cycle(void);
+static int main_cycle(int *lose);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 static int *resume_func(int *resume);
 static int *init_func(void);
 static void store_and_exit(void);
 
 static struct state ps;
-static WINDOW *field;
-static WINDOW *score;
-static int lose = 0;
+static WINDOW *field, *score;
 static char *path;
 
 int main(void)
 {
-    int rowtot, coltot, resume;
+    int rowtot, coltot, resume, lose = 0;
     int *initial_directions = NULL;
     path = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     do {
@@ -82,11 +80,11 @@ int main(void)
         return 1;
     grid_init(initial_directions, resume);
     while (!lose) {
-        if (!main_cycle())
+        if (!main_cycle(&lose))
             break;
     }
     freelist(ps.s);
-    screen_end(rowtot, coltot);
+    screen_end(rowtot, coltot, lose);
     return 0;
 }
 
@@ -109,7 +107,7 @@ static int screen_init(int *rowtot, int *coltot)
         printf("You need at least %d rows and %d columns.\n", ROWS + 6, COLS + 2);
         return 1;
     }
-    /* print grid centered */
+    /* print sub windows centered */
     field = subwin(stdscr, ROWS + 2, COLS + 2, (*rowtot - 6 - ROWS) / 2, (*coltot - COLS - 2) / 2);
     score = subwin(stdscr, 2 + 2, *coltot, *rowtot - 4, 0);
     keypad(field, TRUE);
@@ -129,7 +127,7 @@ static int screen_init(int *rowtot, int *coltot)
     return 0;
 }
 
-static void screen_end(int rowtot, int coltot)
+static void screen_end(int rowtot, int coltot, int lose)
 {
     char exitmsg[] = "Leaving...bye! See you later :)";
     wclear(field);
@@ -180,10 +178,8 @@ static void fruit_gen(void)
     int fixed_grid[dim];
     int i, k;
     int j = 0;
-    if (dim == 0) {
-        lose = 1;
+    if (dim == 0)
         return;
-    }
     for (i = 0; i < ROWS; i++) {
         for (k = 0; k < COLS; k++) {
             if ((mvwinch(field, i + 1, k + 1) & A_CHARTEXT) != *SNAKE_CHAR) {
@@ -211,7 +207,7 @@ static void grid_init(int initial_directions[], int resume)
         colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
-static void snake_move(void)
+static void snake_move(int *lose)
 {
     int eat = 0;
     char c;
@@ -219,7 +215,7 @@ static void snake_move(void)
     ps.snake_head.y = ((ps.snake_head.y + ps.s->direction / 10) + COLS) % COLS;
     c = (mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT);
     if (c == *SNAKE_CHAR) {
-            lose = 1;
+            *lose = 1;
             return;
     } else {
         if (c == *FRUIT_CHAR)
@@ -248,9 +244,9 @@ static void change_directions(void)
     }
 }
 
-static int main_cycle(void)
+static int main_cycle(int *lose)
 {
-    snake_move();
+    snake_move(lose);
     change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
     wrefresh(field);
