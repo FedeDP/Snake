@@ -33,6 +33,7 @@ struct point {
 };
 
 /* Program state struct */
+#pragma pack(push, 1)
 struct state {
     int points;
     int size;
@@ -40,6 +41,7 @@ struct state {
     struct point snake_tail;
     struct point fruit_coord;
 };
+#pragma pack(pop)
 
 static int screen_init(int *rowtot, int *coltot);
 static void screen_end(int rowtot, int coltot, int lose);
