@@ -36,7 +36,6 @@ struct point {
 struct state {
     int points;
     int size;
-    snake *s;
     struct point snake_head;
     struct point snake_tail;
     struct point fruit_coord;
@@ -61,6 +60,7 @@ static void store_and_exit(void);
 static struct state ps;
 static WINDOW *field, *score;
 static char *path;
+static snake *s;
 
 int main(void)
 {
@@ -84,7 +84,7 @@ int main(void)
         if (!main_cycle(&lose))
             break;
     }
-    freelist(ps.s);
+    freelist(s);
     screen_end(rowtot, coltot, lose);
     return 0;
 }
@@ -198,10 +198,10 @@ static void fruit_gen(void)
 static void grid_init(int initial_directions[], int resume)
 {
     snake *temp = NULL;
-    ps.s = reclist(0, NULL, initial_directions, ps.snake_head.x, ps.snake_head.y);
-    for (temp = ps.s; temp->next; temp = temp->next);
+    s = reclist(0, NULL, initial_directions, ps.snake_head.x, ps.snake_head.y);
+    for (temp = s; temp->next; temp = temp->next);
     /* Circular list: first elem has a ptr to last elem */
-    ps.s->previous = temp;
+    s->previous = temp;
     if (!resume)
         fruit_gen();
     else
@@ -212,8 +212,8 @@ static void snake_move(int *lose)
 {
     int eat = 0;
     char c;
-    ps.snake_head.x = ((ps.snake_head.x + ps.s->direction % 10) + ROWS) % ROWS;
-    ps.snake_head.y = ((ps.snake_head.y + ps.s->direction / 10) + COLS) % COLS;
+    ps.snake_head.x = ((ps.snake_head.x + s->direction % 10) + ROWS) % ROWS;
+    ps.snake_head.y = ((ps.snake_head.y + s->direction / 10) + COLS) % COLS;
     c = (mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT);
     if (c == *SNAKE_CHAR) {
             *lose = 1;
@@ -225,8 +225,8 @@ static void snake_move(int *lose)
     colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, 2);
     if (!eat) {
         mvwprintw(field, ps.snake_tail.x + 1,  ps.snake_tail.y + 1, " ");
-        ps.snake_tail.x = ((ps.snake_tail.x + ps.s->previous->direction % 10) + ROWS) % ROWS;
-        ps.snake_tail.y = ((ps.snake_tail.y + ps.s->previous->direction / 10) + COLS) % COLS;
+        ps.snake_tail.x = ((ps.snake_tail.x + s->previous->direction % 10) + ROWS) % ROWS;
+        ps.snake_tail.y = ((ps.snake_tail.y + s->previous->direction / 10) + COLS) % COLS;
     } else {
         eat_fruit();
         ps.size++;
@@ -238,8 +238,8 @@ static void snake_move(int *lose)
 static void change_directions(void)
 {
     snake *temp = NULL;
-    temp = ps.s->previous;
-    while (temp != ps.s) {
+    temp = s->previous;
+    while (temp != s) {
         temp->direction = temp->previous->direction;
         temp = temp->previous;
     }
@@ -253,20 +253,20 @@ static int main_cycle(int *lose)
     wrefresh(field);
     switch (wgetch(field)) {
     case KEY_LEFT:
-        if (ps.s->direction != RIGHT)
-            ps.s->direction = LEFT;
+        if (s->direction != RIGHT)
+            s->direction = LEFT;
         break;
     case KEY_RIGHT:
-        if (ps.s->direction != LEFT)
-            ps.s->direction = RIGHT;
+        if (s->direction != LEFT)
+            s->direction = RIGHT;
         break;
     case KEY_UP:
-        if (ps.s->direction != DOWN)
-            ps.s->direction = UP;
+        if (s->direction != DOWN)
+            s->direction = UP;
         break;
     case KEY_DOWN:
-        if (ps.s->direction != UP)
-            ps.s->direction = DOWN;
+        if (s->direction != UP)
+            s->direction = DOWN;
         break;
     case 's': /* "s" to store current game and exit */
         store_and_exit();
@@ -280,23 +280,23 @@ static int main_cycle(int *lose)
 static void eat_fruit(void)
 {
     ps.points = ps.points + 7;
-    ps.s = snake_grow();
+    s = snake_grow();
     fruit_gen();
 }
 
 static snake *snake_grow(void)
 {
-    snake *temp = ps.s->previous;
+    snake *temp = s->previous;
     temp->next = malloc(sizeof(snake));
     if (temp->next) {
         temp->next->previous = temp;
         temp->next->direction = temp->direction;
         temp->next->next = NULL;
-        ps.s->previous = temp->next;
+        s->previous = temp->next;
     } else {
         temp->next = NULL;
     }
-    return ps.s;
+    return s;
 }
 
 static void colored_print(WINDOW *win, int x, int y, char *c, int color)
@@ -312,14 +312,7 @@ static int *resume_func(int *resume)
     int *initial_directions = NULL;
     int i = 0;
     if ((f = fopen(path, "r"))) {
-        fscanf(f, "%d\n", &ps.points);
-        fscanf(f, "%d\n", &ps.size);
-        fscanf(f, "%d\n", &ps.fruit_coord.x);
-        fscanf(f, "%d\n", &ps.fruit_coord.y);
-        fscanf(f, "%d\n", &ps.snake_head.x);
-        fscanf(f, "%d\n", &ps.snake_head.y);
-        fscanf(f, "%d\n", &ps.snake_tail.x);
-        fscanf(f, "%d\n", &ps.snake_tail.y);
+        fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
         initial_directions = malloc(sizeof(int) * ps.size);
         while (i != ps.size) {
             fscanf(f, "%i\n", &initial_directions[i]);
@@ -359,15 +352,8 @@ static void store_and_exit(void)
     FILE *f = NULL;
     snake *temp = NULL;
     if ((f = fopen(path, "w"))) {
-        fprintf(f, "%d\n", ps.points);
-        fprintf(f, "%d\n", ps.size);
-        fprintf(f, "%d\n", ps.fruit_coord.x);
-        fprintf(f, "%d\n", ps.fruit_coord.y);
-        fprintf(f, "%d\n", ps.snake_head.x);
-        fprintf(f, "%d\n", ps.snake_head.y);
-        fprintf(f, "%d\n", ps.snake_tail.x);
-        fprintf(f, "%d\n", ps.snake_tail.y);
-        for (temp = ps.s; temp; temp = temp->next)
+        fwrite(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
+        for (temp = s; temp; temp = temp->next)
             fprintf(f, "%i\n", temp->direction);
         fclose(f);
     } else {
