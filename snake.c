@@ -43,7 +43,7 @@ struct state {
 };
 #pragma pack(pop)
 
-static int screen_init(int *rowtot, int *coltot);
+static int screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int lose);
 static snake *reclist(int i, snake *previous, int directions[], int x, int y);
 static void freelist(snake *s);
@@ -78,7 +78,9 @@ int main(void)
     else
         initial_directions = init_func();
     srand(time(NULL));
-    if (screen_init(&rowtot, &coltot))
+    initscr();
+    getmaxyx(stdscr, rowtot, coltot);
+    if (screen_init(rowtot, coltot))
         return 1;
     grid_init(initial_directions, resume);
     free(initial_directions);
@@ -91,9 +93,8 @@ int main(void)
     return 0;
 }
 
-static int screen_init(int *rowtot, int *coltot)
+static int screen_init(int rowtot, int coltot)
 {
-    initscr();
     start_color();
     init_pair(1, COLOR_RED, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
@@ -101,18 +102,17 @@ static int screen_init(int *rowtot, int *coltot)
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     raw();
     noecho();
-    getmaxyx(stdscr, *rowtot, *coltot);
     /* check terminal size */
-    if ((*rowtot < ROWS + 6) || (*coltot < COLS + 2)) {
+    if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
         clear();
         endwin();
-        printf("This screen has %d rows and %d columns. Enlarge it.\n", *rowtot, *coltot);
+        printf("This screen has %d rows and %d columns. Enlarge it.\n", rowtot, coltot);
         printf("You need at least %d rows and %d columns.\n", ROWS + 6, COLS + 2);
         return 1;
     }
     /* print sub windows centered */
-    field = subwin(stdscr, ROWS + 2, COLS + 2, (*rowtot - 6 - ROWS) / 2, (*coltot - COLS - 2) / 2);
-    score = subwin(stdscr, 2 + 2, *coltot, *rowtot - 4, 0);
+    field = subwin(stdscr, ROWS + 2, COLS + 2, (rowtot - 6 - ROWS) / 2, (coltot - COLS - 2) / 2);
+    score = subwin(stdscr, 2 + 2, coltot, rowtot - 4, 0);
     keypad(field, TRUE);
     wtimeout(field, 30);
     wattron(field, COLOR_PAIR(4));
@@ -231,7 +231,6 @@ static void snake_move(int *lose)
         ps.snake_tail.y = ((ps.snake_tail.y + s->previous->direction / 10) + COLS) % COLS;
     } else {
         eat_fruit();
-        ps.size++;
         mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(score);
     }
@@ -283,6 +282,7 @@ static void eat_fruit(void)
 {
     ps.points = ps.points + 7;
     s = snake_grow();
+    ps.size++;
     fruit_gen();
 }
 
