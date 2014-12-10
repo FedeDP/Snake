@@ -95,13 +95,6 @@ int main(void)
 
 static int screen_init(int rowtot, int coltot)
 {
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_CYAN, COLOR_BLACK);
-    raw();
-    noecho();
     /* check terminal size */
     if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
         clear();
@@ -110,6 +103,13 @@ static int screen_init(int rowtot, int coltot)
         printf("You need at least %d rows and %d columns.\n", ROWS + 6, COLS + 2);
         return 1;
     }
+    start_color();
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(4, COLOR_CYAN, COLOR_BLACK);
+    raw();
+    noecho();
     /* print sub windows centered */
     field = subwin(stdscr, ROWS + 2, COLS + 2, (rowtot - 6 - ROWS) / 2, (coltot - COLS - 2) / 2);
     score = subwin(stdscr, 2 + 2, coltot, rowtot - 4, 0);
