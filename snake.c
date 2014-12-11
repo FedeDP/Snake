@@ -43,7 +43,7 @@ struct state {
 };
 #pragma pack(pop)
 
-static int screen_init(int rowtot, int coltot);
+static void screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int lose);
 static snake *reclist(int i, snake *previous, int directions[], int x, int y);
 static void freelist(snake *s);
@@ -100,7 +100,7 @@ int main(void)
     return 0;
 }
 
-static int screen_init(int rowtot, int coltot)
+static void screen_init(int rowtot, int coltot)
 {
     start_color();
     init_pair(1, COLOR_RED, COLOR_BLACK);
@@ -126,7 +126,6 @@ static int screen_init(int rowtot, int coltot)
     colored_print(field, -1, -1, "Snake", 4);
     mvwprintw(score, 0, 0, "Score");
     wrefresh(score);
-    return 0;
 }
 
 static void screen_end(int rowtot, int coltot, int lose)
