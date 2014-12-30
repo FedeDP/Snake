@@ -208,7 +208,7 @@ static void grid_init(int initial_directions[], int resume)
         colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
-static void snake_move(int *lose)
+/*static void snake_move(int *lose)
 {
     int eat = 0;
     char c;
@@ -232,6 +232,26 @@ static void snake_move(int *lose)
         mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
         wrefresh(score);
     }
+}*/
+
+static void snake_move(int *lose)
+{
+    ps.snake_head.x = ((ps.snake_head.x + s->direction % 10) + ROWS) % ROWS;
+    ps.snake_head.y = ((ps.snake_head.y + s->direction / 10) + COLS) % COLS;
+    if ((mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT) == *FRUIT_CHAR) {
+        eat_fruit();
+        mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
+        wrefresh(score);
+    } else {
+        mvwprintw(field, ps.snake_tail.x + 1,  ps.snake_tail.y + 1, " ");
+        ps.snake_tail.x = ((ps.snake_tail.x + s->previous->direction % 10) + ROWS) % ROWS;
+        ps.snake_tail.y = ((ps.snake_tail.y + s->previous->direction / 10) + COLS) % COLS;
+        if ((mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
+            *lose = 1;
+            return;
+        }
+    }
+    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, 2);
 }
 
 static void change_directions(void)
