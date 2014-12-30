@@ -120,7 +120,10 @@ static void screen_init(int rowtot, int coltot)
     wborder(score, '|', '|', '-', '-', '+', '+', '+', '+');
     wattroff(field, COLOR_PAIR);
     mvwprintw(score, 2, 1, "q anytime to *rage* quit. Arrow keys to move. s to save current game and leave.");
-    mvwprintw(score, 1, 1, "Points: %d", ps.points);
+    mvwprintw(score, 1, 1, "Points: ");
+    if (ps.points > 0)
+        wattron(score, A_BOLD);
+    mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
     wattron(field, A_BOLD);
     wattron(score, A_BOLD);
     colored_print(field, -1, -1, "Snake", 4);
@@ -207,32 +210,6 @@ static void grid_init(int initial_directions[], int resume)
     else
         colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
-
-/*static void snake_move(int *lose)
-{
-    int eat = 0;
-    char c;
-    ps.snake_head.x = ((ps.snake_head.x + s->direction % 10) + ROWS) % ROWS;
-    ps.snake_head.y = ((ps.snake_head.y + s->direction / 10) + COLS) % COLS;
-    c = (mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT);
-    if (c == *SNAKE_CHAR) {
-            *lose = 1;
-            return;
-    } else {
-        if (c == *FRUIT_CHAR)
-            eat = 1;
-    }
-    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, 2);
-    if (!eat) {
-        mvwprintw(field, ps.snake_tail.x + 1,  ps.snake_tail.y + 1, " ");
-        ps.snake_tail.x = ((ps.snake_tail.x + s->previous->direction % 10) + ROWS) % ROWS;
-        ps.snake_tail.y = ((ps.snake_tail.y + s->previous->direction / 10) + COLS) % COLS;
-    } else {
-        eat_fruit();
-        mvwprintw(score, 1, strlen("Points: ") + 1, "%d", ps.points);
-        wrefresh(score);
-    }
-}*/
 
 static void snake_move(int *lose)
 {
