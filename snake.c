@@ -246,7 +246,6 @@ static int main_cycle(int *lose)
     snake_move(lose);
     change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
-    wrefresh(field);
     switch (wgetch(field)) {
     case KEY_LEFT:
         if (s->direction != RIGHT)
