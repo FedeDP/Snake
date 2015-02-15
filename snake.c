@@ -416,7 +416,7 @@ static void print_score_list(void)
             score_list = realloc(score_list, (i + 1) * sizeof(int));
             fscanf(f, "%i\n", &score_list[i]);
             i++;
-        } while (score_list[i - 1] != 0);
+        } while (score_list[i - 1] != 0 && (i - 1 < MAX_SCORE_LENGTH));
         dim = i - 1;
         fclose(f);
         printf("\tTop scores:\n");
