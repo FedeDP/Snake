@@ -97,7 +97,7 @@ static int starting_questions(int argc, char *argv[], int **initial_directions)
     if ((argc == 1) ||
         (((strcmp(argv[1],"--new")) != 0) && ((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"--resume")) != 0)
         && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"--scores")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
-        printf("Helper message.\nStart this program with:\n\t'--new' or '-n' if you want to play a new game;\n\t'-r' or '--resume' to resume your last saved game;\n\t'--scores' or '-s' to view your top scores\n");
+        printf("Helper message.\nStart this program with:\n\t'--new' or '-n' if you want to play a new game;\n\t'--resume' or '-r' to resume your last saved game;\n\t'--scores' or '-s' to view your top scores.\n");
         return 1;
     }
     if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
