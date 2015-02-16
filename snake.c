@@ -385,28 +385,37 @@ static void store_score(void)
 {
     char *path_score_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake_score.txt");
     FILE *f = NULL;
-    int score_list[MAX_SCORE_LENGTH] = {ps.points};
-    int i = 0;
+    int *score_list = NULL;
+    int i = 0, dim = 0;
     if ((f = fopen(path_score_file, "r"))) {
-        while(i != MAX_SCORE_LENGTH) {
+        do {
+            score_list = realloc(score_list, (i + 1) * sizeof(int));
             fscanf(f, "%i\n", &score_list[i]);
             i++;
-        }
+        } while ((i != MAX_SCORE_LENGTH) && (!feof(f)));
         fclose(f);
-        i = MAX_SCORE_LENGTH - 1;
-        if (score_list[i] > ps.points)
-            return;
-        score_list[i] = ps.points;
-        while (score_list[i] > score_list[i - 1] && i > 0) {
+        dim = i;
+        if (dim == MAX_SCORE_LENGTH) {
+            if (score_list[dim] > ps.points)
+                return;
+            score_list[dim] = ps.points;
+        } else {
+            score_list = realloc(score_list, (i + 1) * sizeof(int));
+            score_list[i] = ps.points;
+            dim++;
+        }
+        while ((score_list[i] > score_list[i - 1]) && (i > 0)) {
             score_list[i] = score_list[i - 1];
             score_list[i - 1] = ps.points;
             i--;
         }
     }
     f = fopen(path_score_file, "w");
-    for(i = 0; i < MAX_SCORE_LENGTH; i++) {
-        fprintf(f, "%i\n", score_list[i]);
-    }
+    if (dim != 0) {
+        for(i = 0; i < dim; i++)
+            fprintf(f, "%i\n", score_list[i]);
+    } else
+        fprintf(f, "%i\n", ps.points);
     fclose(f);
 }
 
@@ -420,7 +429,7 @@ static void print_score_list(void)
             score_list = realloc(score_list, (i + 1) * sizeof(int));
             fscanf(f, "%i\n", &score_list[i]);
             i++;
-        } while (score_list[i - 1] != 0 && (i < MAX_SCORE_LENGTH));
+        } while (!feof(f) && (i < MAX_SCORE_LENGTH));
         dim = i;
         fclose(f);
         printf("\tTop scores:\n");
