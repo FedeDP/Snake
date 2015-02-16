@@ -414,7 +414,7 @@ static void print_score_list(void)
 {
     char *path_score_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake_score.txt");
     FILE *f = NULL;
-    int *score_list, i = 0, dim;
+    int *score_list = NULL, i = 0, dim;
     if ((f = fopen(path_score_file, "r"))) {
         do {
             score_list = realloc(score_list, (i + 1) * sizeof(int));
