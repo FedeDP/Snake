@@ -396,9 +396,9 @@ static void store_score(void)
         fclose(f);
         dim = i;
         if (dim == MAX_SCORE_LENGTH) {
-            if (score_list[dim] > ps.points)
+            if (score_list[dim - 1] > ps.points)
                 return;
-            score_list[dim] = ps.points;
+            score_list[dim - 1] = ps.points;
         } else {
             score_list = realloc(score_list, (i + 1) * sizeof(int));
             score_list[i] = ps.points;
