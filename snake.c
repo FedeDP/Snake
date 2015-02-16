@@ -44,7 +44,7 @@ struct state {
 };
 #pragma pack(pop)
 
-static int starting_questions(int argc, char *argv[], int **initial_directions);
+static int starting_questions(int argc, char *argv[], int **initial_directions, int *resume);
 static int check_term_size(int rowtot, int coltot);
 static void screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int lose);
@@ -58,7 +58,7 @@ static void snake_move(int *lose);
 static snake *snake_grow(void);
 static int main_cycle(int *lose);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
-static int *resume_func(int *initial_directions);
+static int *resume_func(int *initial_directions, int *resume);
 static int *init_func(int *initial_directions);
 static void store_and_exit(void);
 static void store_score(void);
@@ -66,14 +66,13 @@ static void print_score_list(void);
 
 static struct state ps;
 static WINDOW *field, *score;
-static int resume;
 static snake *s;
 
 int main(int argc, char *argv[])
 {
-    int rowtot, coltot, lose = 0;
+    int rowtot, coltot, lose = 0, resume = 0;
     int *initial_directions = NULL;
-    if (starting_questions(argc, argv, &initial_directions) == 1)
+    if (starting_questions(argc, argv, &initial_directions, &resume) == 1)
         return 0;
     srand(time(NULL));
     initscr();
@@ -92,25 +91,26 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static int starting_questions(int argc, char *argv[], int **initial_directions)
+static int starting_questions(int argc, char *argv[], int **initial_directions, int *resume)
 {
     if ((argc == 1) ||
         (((strcmp(argv[1],"--new")) != 0) && ((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"--resume")) != 0)
         && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"--scores")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
         printf("Helper message.\nStart this program with:\n\t'--new' or '-n' if you want to play a new game;\n\t'--resume' or '-r' to resume your last saved game;\n\t'--scores' or '-s' to view your top scores.\n");
-        return 1;
-    }
-    if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
-            *initial_directions = init_func(*initial_directions);
-    else {
-        if (((strcmp(argv[1],"--resume")) == 0) || ((strcmp(argv[1],"-r")) == 0))
-            *initial_directions = resume_func(*initial_directions);
-        else {
-            print_score_list();
-            return 1;
+    return 1;
         }
-    }
-    return 0;
+        if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
+            *initial_directions = init_func(*initial_directions);
+        else {
+            if (((strcmp(argv[1],"--resume")) == 0) || ((strcmp(argv[1],"-r")) == 0)) {
+                *resume = 1;
+                *initial_directions = resume_func(*initial_directions, resume);
+            } else {
+                print_score_list();
+                return 1;
+            }
+        }
+        return 0;
 }
 
 static int check_term_size(int rowtot, int coltot)
@@ -273,29 +273,28 @@ static int main_cycle(int *lose)
     change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
     switch (wgetch(field)) {
-    case KEY_LEFT:
-        if (s->direction != RIGHT)
-            s->direction = LEFT;
-        break;
-    case KEY_RIGHT:
-        if (s->direction != LEFT)
-            s->direction = RIGHT;
-        break;
-    case KEY_UP:
-        if (s->direction != DOWN)
-            s->direction = UP;
-        break;
-    case KEY_DOWN:
-        if (s->direction != UP)
-            s->direction = DOWN;
-        break;
-    case 's': /* "s" to store current game and exit */
-        store_and_exit();
-        return 0;
-    case 'q': /* q to exit */
-        if (ps.points > 0)
-            store_score();
-        return 0;
+        case KEY_LEFT:
+            if (s->direction != RIGHT)
+                s->direction = LEFT;
+            break;
+        case KEY_RIGHT:
+            if (s->direction != LEFT)
+                s->direction = RIGHT;
+            break;
+        case KEY_UP:
+            if (s->direction != DOWN)
+                s->direction = UP;
+            break;
+        case KEY_DOWN:
+            if (s->direction != UP)
+                s->direction = DOWN;
+            break;
+        case 's': /* "s" to store current game and exit */
+            store_and_exit();
+            return 0;
+        case 'q': /* q to exit */
+            *lose = 1;
+            return 0;
     }
     return 1;
 }
@@ -330,7 +329,7 @@ static void colored_print(WINDOW *win, int x, int y, char *c, int color)
     wattroff(win, COLOR_PAIR);
 }
 
-static int *resume_func(int *initial_directions)
+static int *resume_func(int *initial_directions, int *resume)
 {
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
@@ -347,7 +346,7 @@ static int *resume_func(int *initial_directions)
         return initial_directions;
     }
     printf("No previous games found. Starting a new match.\n");
-    resume = 0;
+    *resume = 0;
     sleep(1);
     return init_func(initial_directions);
 }
