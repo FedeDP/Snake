@@ -47,7 +47,7 @@ struct state {
 static int starting_questions(int argc, char *argv[], int **initial_directions, int *resume);
 static int check_term_size(int rowtot, int coltot);
 static void screen_init(int rowtot, int coltot);
-static void screen_end(int rowtot, int coltot, int lose);
+static void screen_end(int rowtot, int coltot, int lose, int store);
 static snake *reclist(int i, snake *previous, int directions[], int x, int y);
 static void freelist(snake *s);
 static void fruit_gen(void);
@@ -56,7 +56,7 @@ static void change_directions(void);
 static void eat_fruit(void);
 static void snake_move(int *lose);
 static snake *snake_grow(void);
-static int main_cycle(int *lose);
+static void main_cycle(int *lose, int *store);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 static int *resume_func(int *initial_directions, int *resume);
 static int *init_func(int *initial_directions);
@@ -70,7 +70,7 @@ static snake *s;
 
 int main(int argc, char *argv[])
 {
-    int rowtot, coltot, lose = 0, resume = 0;
+    int rowtot, coltot, lose = 0, resume = 0, store = 0;
     int *initial_directions = NULL;
     if (starting_questions(argc, argv, &initial_directions, &resume) == 1)
         return 0;
@@ -82,12 +82,10 @@ int main(int argc, char *argv[])
     screen_init(rowtot, coltot);
     grid_init(initial_directions, resume);
     free(initial_directions);
-    while (!lose) {
-        if (!main_cycle(&lose))
-            break;
-    }
+    while ((!lose) && (!store))
+        main_cycle(&lose, &store);
+    screen_end(rowtot, coltot, lose, store);
     freelist(s);
-    screen_end(rowtot, coltot, lose);
     return 0;
 }
 
@@ -97,20 +95,20 @@ static int starting_questions(int argc, char *argv[], int **initial_directions, 
         (((strcmp(argv[1],"--new")) != 0) && ((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"--resume")) != 0)
         && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"--scores")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
         printf("Helper message.\nStart this program with:\n\t'--new' or '-n' if you want to play a new game;\n\t'--resume' or '-r' to resume your last saved game;\n\t'--scores' or '-s' to view your top scores.\n");
-    return 1;
+        return 1;
+    }
+    if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
+        *initial_directions = init_func(*initial_directions);
+    else {
+        if (((strcmp(argv[1],"--resume")) == 0) || ((strcmp(argv[1],"-r")) == 0)) {
+            *resume = 1;
+            *initial_directions = resume_func(*initial_directions, resume);
+        } else {
+            print_score_list();
+            return 1;
         }
-        if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
-            *initial_directions = init_func(*initial_directions);
-        else {
-            if (((strcmp(argv[1],"--resume")) == 0) || ((strcmp(argv[1],"-r")) == 0)) {
-                *resume = 1;
-                *initial_directions = resume_func(*initial_directions, resume);
-            } else {
-                print_score_list();
-                return 1;
-            }
-        }
-        return 0;
+    }
+    return 0;
 }
 
 static int check_term_size(int rowtot, int coltot)
@@ -156,7 +154,7 @@ static void screen_init(int rowtot, int coltot)
     wrefresh(score);
 }
 
-static void screen_end(int rowtot, int coltot, int lose)
+static void screen_end(int rowtot, int coltot, int lose, int store)
 {
     char exitmsg[] = "Leaving...bye! See you later :)";
     wclear(field);
@@ -168,8 +166,11 @@ static void screen_end(int rowtot, int coltot, int lose)
     if (lose) {
         store_score();
         mvprintw(rowtot / 2, (coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", ps.points);
-    } else
+    } else {
+        if (store)
+            store_and_exit();
         mvprintw(rowtot / 2, (coltot - strlen(exitmsg)) / 2, "%s", exitmsg);
+    }
     refresh();
     sleep(1);
     attroff(COLOR_PAIR);
@@ -267,7 +268,7 @@ static void change_directions(void)
     }
 }
 
-static int main_cycle(int *lose)
+static void main_cycle(int *lose, int *store)
 {
     snake_move(lose);
     change_directions();
@@ -290,13 +291,12 @@ static int main_cycle(int *lose)
                 s->direction = DOWN;
             break;
         case 's': /* "s" to store current game and exit */
-            store_and_exit();
-            return 0;
+            *store = 1;
+            break;
         case 'q': /* q to exit */
             *lose = 1;
-            return 0;
+            break;
     }
-    return 1;
 }
 
 static void eat_fruit(void)
