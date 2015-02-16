@@ -44,7 +44,7 @@ struct state {
 };
 #pragma pack(pop)
 
-static void starting_questions(int **initial_directions);
+static int starting_questions(int argc, char *argv[], int **initial_directions);
 static int check_term_size(int rowtot, int coltot);
 static void screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int lose);
@@ -69,15 +69,12 @@ static WINDOW *field, *score;
 static int resume;
 static snake *s;
 
-int main(void)
+int main(int argc, char *argv[])
 {
     int rowtot, coltot, lose = 0;
     int *initial_directions = NULL;
-    starting_questions(&initial_directions);
-    if (resume == -1) {
-        printf("Bye bye!\n");
+    if (starting_questions(argc, argv, &initial_directions) == 1)
         return 0;
-    }
     srand(time(NULL));
     initscr();
     getmaxyx(stdscr, rowtot, coltot);
@@ -95,26 +92,25 @@ int main(void)
     return 0;
 }
 
-static void starting_questions(int **initial_directions)
+static int starting_questions(int argc, char *argv[], int **initial_directions)
 {
-    do {
-        printf("Do you want to play a new game[0], resume[1] last game, take a look[2] to your top 10 scores or leave[3]?\n");
-        scanf("%d", &resume);
-    } while (resume != 0 && resume != 1 && resume != 2 && resume != 3);
-    switch (resume) {
-        case 0:
-            *initial_directions = init_func(*initial_directions);
-            break;
-        case 1:
-            *initial_directions = resume_func(*initial_directions);
-            break;
-        case 2:
-            print_score_list();
-            return starting_questions(initial_directions);
-        case 3:
-            resume = -1;
-            break;
+    if ((argc == 1) ||
+        (((strcmp(argv[1],"--new")) != 0) && ((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"--resume")) != 0)
+        && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"--scores")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
+        printf("Helper message.\nStart this program with:\n\t'--new' or '-n' if you want to play a new game;\n\t'-r' or '--resume' to resume your last saved game;\n\t'--scores' or '-s' to view your top scores\n");
+        return 1;
     }
+    if (((strcmp(argv[1],"--new")) == 0) || ((strcmp(argv[1],"-n")) == 0))
+            *initial_directions = init_func(*initial_directions);
+    else {
+        if (((strcmp(argv[1],"--resume")) == 0) || ((strcmp(argv[1],"-r")) == 0))
+            *initial_directions = resume_func(*initial_directions);
+        else {
+            print_score_list();
+            return 1;
+        }
+    }
+    return 0;
 }
 
 static int check_term_size(int rowtot, int coltot)
