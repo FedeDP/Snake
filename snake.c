@@ -182,14 +182,10 @@ static snake *reclist(int i, snake *previous, int directions[], int x, int y)
     if (s) {
         s->direction = directions[i];
         s->previous = previous;
-        if (i != 0) {
-            x = ((x - (s->direction % 10)) + ROWS) % ROWS;
-            y = ((y - (s->direction / 10)) + COLS) % COLS;
-        }
         colored_print(field, x, y, SNAKE_CHAR, 2);
         i++;
         if (i != ps.size)
-            s->next = reclist(i, s, directions, x, y);
+            s->next = reclist(i, s, directions, ((x - (directions[i] % 10)) + ROWS) % ROWS, ((y - (directions[i] / 10)) + COLS) % COLS);
         else
             s->next = NULL;
     }
