@@ -9,7 +9,7 @@
 #define ROWS 30
 #define COLS 120
 #define STARTING_SIZE 3
-#define MAX_SCORE_LENGTH 10
+#define MAX_SCORE_LENGTH 9
 #define FRUIT_POINTS 7
 
 /* eigenvectors associated to snake movements */
