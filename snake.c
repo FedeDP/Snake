@@ -105,6 +105,7 @@ static int check_term_size(int rowtot, int coltot)
     if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
         clear();
         endwin();
+        delwin(stdscr);
         printf("This screen has %d rows and %d columns. Enlarge it.\n", rowtot, coltot);
         printf("You need at least %d rows and %d columns.\n", ROWS + 6, COLS + 2);
         return 1;
