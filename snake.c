@@ -201,13 +201,14 @@ static void freelist(snake *s)
 static void fruit_gen(void)
 {
     int j;
-    if ((ROWS * COLS) == ps.size)
+    int tot = ROWS * COLS;
+    if ((tot) == ps.size)
         return;
-    j = rand() % (ROWS * COLS);
+    j = rand() % (tot);
     do {
         ps.fruit_coord.x = j / COLS;
         ps.fruit_coord.y = j - (ps.fruit_coord.x * COLS);
-        j++;
+        j = (j + 1 + (tot)) % (tot);
     } while ((mvwinch(field,  ps.fruit_coord.x + 1,  ps.fruit_coord.y + 1) & A_CHARTEXT) == *SNAKE_CHAR);
     colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
