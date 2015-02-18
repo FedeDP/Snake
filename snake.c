@@ -178,18 +178,17 @@ static void screen_end(int rowtot, int coltot, int lose, int store)
 
 static snake *reclist(int i, snake *previous, int directions[], int x, int y)
 {
-    snake *s = malloc(sizeof(snake));
-    if (s) {
-        s->direction = directions[i];
-        s->previous = previous;
+    snake *h = malloc(sizeof(snake));
+    if (h) {
+        h->direction = directions[i];
+        h->previous = previous;
         colored_print(field, x, y, SNAKE_CHAR, 2);
-        i++;
-        if (i != ps.size)
-            s->next = reclist(i, s, directions, ((x - (directions[i] % 10)) + ROWS) % ROWS, ((y - (directions[i] / 10)) + COLS) % COLS);
+        if (i + 1 != ps.size)
+            h->next = reclist(i + 1, h, directions, ((x - (directions[i] % 10)) + ROWS) % ROWS, ((y - (directions[i] / 10)) + COLS) % COLS);
         else
-            s->next = NULL;
+            h->next = NULL;
     }
-    return s;
+    return h;
 }
 
 static void freelist(snake *s)
@@ -201,23 +200,15 @@ static void freelist(snake *s)
 
 static void fruit_gen(void)
 {
-    int dim = (ROWS * COLS) - ps.size;
-    int fixed_grid[dim];
-    int i, k;
-    int j = 0;
-    if (dim == 0)
+    int j;
+    if ((ROWS * COLS) == ps.size)
         return;
-    for (i = 0; i < ROWS; i++) {
-        for (k = 0; k < COLS; k++) {
-            if ((mvwinch(field, i + 1, k + 1) & A_CHARTEXT) != *SNAKE_CHAR) {
-                fixed_grid[j] = (i * COLS) + k;
-                j++;
-            }
-        }
-    }
-    j = rand() % dim;
-    ps.fruit_coord.x = fixed_grid[j] / COLS;
-    ps.fruit_coord.y = fixed_grid[j] - (ps.fruit_coord.x * COLS);
+    j = rand() % (ROWS * COLS);
+    do {
+        ps.fruit_coord.x = j / COLS;
+        ps.fruit_coord.y = j - (ps.fruit_coord.x * COLS);
+        j++;
+    } while ((mvwinch(field,  ps.fruit_coord.x + 1,  ps.fruit_coord.y + 1) & A_CHARTEXT) == *SNAKE_CHAR);
     colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
@@ -305,8 +296,7 @@ static void eat_fruit(void)
 static snake *snake_grow(void)
 {
     snake *temp = s->previous;
-    temp->next = malloc(sizeof(snake));
-    if (temp->next) {
+    if ((temp->next = malloc(sizeof(snake)))) {
         temp->next->previous = temp;
         temp->next->direction = temp->direction;
         temp->next->next = NULL;
