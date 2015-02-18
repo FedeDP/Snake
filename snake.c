@@ -286,12 +286,10 @@ static void resume_func(int *resume)
 {
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
-    int i;
     if ((f = fopen(path_resume_file, "r"))) {
         fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
         snake = malloc(sizeof(int) * ps.size);
-        for (i = 0; i < ps.size; i++)
-            fscanf(f, "%d\n", &snake[i]);
+        fread(snake, sizeof(int), ps.size, f);
         fclose(f);
         remove(path_resume_file);
     } else {
@@ -318,11 +316,9 @@ static void init_func(void)
 static void store_and_exit()
 {
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
-    int i;
     FILE *f = fopen(path_resume_file, "w");
     fwrite(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
-    for (i = 0; i < ps.size; i++)
-        fprintf(f, "%i\n", snake[i]);
+    fwrite(snake, sizeof(int), ps.size, f);
     fclose(f);
 }
 
