@@ -59,7 +59,7 @@ static void store_score(void);
 static void print_score_list(void);
 
 static struct state ps;
-static WINDOW *field, *score;
+static WINDOW *field = NULL, *score = NULL;
 static int *snake = NULL;
 
 int main(int argc, char *argv[])
@@ -183,8 +183,7 @@ static void print_initial_snake(int x, int y, int i)
 
 static void fruit_gen(void)
 {
-    int j;
-    int tot = ROWS * COLS;
+    int j, tot = ROWS * COLS;
     if ((tot) == ps.size)
         return;
     j = rand() % (tot);
