@@ -156,7 +156,7 @@ static void screen_end(int rowtot, int coltot, int lose, int store)
     attron(COLOR_PAIR(rand() % 4 + 1));
     attron(A_BOLD);
     if (lose) {
-        if ((ps.size - STARTING_SIZE) * FRUIT_POINTS > 0)
+        if (ps.size != STARTING_SIZE)
             store_score();
         mvprintw(rowtot / 2, (coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
     } else {
