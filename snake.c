@@ -3,7 +3,6 @@
 #include <string.h>
 #include <ncurses.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <pwd.h>
 
 #define ROWS 30
@@ -60,10 +59,8 @@ static void print_score_list(void);
 /* Give default "new match" values to program state struct */
 static struct state ps = {
     .size = STARTING_SIZE,
-    .snake_head.x = ROWS/2,
-    .snake_head.y = COLS/2,
-    .snake_tail.x = ROWS/2,
-    .snake_tail.y = COLS/2 - (STARTING_SIZE - 1),
+    .snake_head = {ROWS/2, COLS/2},
+    .snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)},
 };
 static WINDOW *field = NULL, *score = NULL;
 static int *snake = NULL;
@@ -100,10 +97,8 @@ static int starting_questions(int argc, char *argv[], int *resume)
         print_score_list();
         return 1;
     }
-    if (((strcmp(argv[1],"-r")) == 0)) {
-        *resume = 1;
+    if (((strcmp(argv[1],"-r")) == 0))
         resume_func(resume);
-    }
     return 0;
 }
 
@@ -299,9 +294,9 @@ static void resume_func(int *resume)
         fread(snake, sizeof(int), ps.size, f);
         fclose(f);
         remove(path_resume_file);
+        *resume = 1;
     } else {
         printf("No previous games found. Starting a new match.\n");
-        *resume = 0;
         sleep(1);
     }
 }
