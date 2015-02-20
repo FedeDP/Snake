@@ -38,20 +38,20 @@ struct state {
 };
 #pragma pack(pop)
 
-static int starting_questions(int argc, char *argv[], int *resume);
+static int starting_questions(int argc, char *argv[]);
 static int check_term_size(int rowtot, int coltot);
-static void screen_init(int rowtot, int coltot, int resume);
+static void screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int lose, int store);
 static void print_initial_snake(int x, int y, int i);
 static void fruit_gen(void);
-static void grid_init(int resume);
+static void grid_init(void);
 static void change_directions(void);
 static void eat_fruit(void);
 static void snake_move(int *lose);
 static void snake_grow(void);
 static void main_cycle(int *lose, int *store);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
-static void resume_func(int *resume);
+static void resume_func(void);
 static void store_and_exit(void);
 static void store_score(void);
 static void print_score_list(void);
@@ -61,25 +61,23 @@ static struct state ps = {
     .size = STARTING_SIZE,
     .snake_head = {ROWS/2, COLS/2},
     .snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)},
+    .fruit_coord = {-1, -1},
 };
 static WINDOW *field = NULL, *score = NULL;
 static int *snake = NULL;
 
 int main(int argc, char *argv[])
 {
-    int rowtot, coltot, lose = 0, resume = 0, store = 0, i;
-    snake = malloc(sizeof(int) * STARTING_SIZE);
-    for (i = 0; i < STARTING_SIZE; i++)
-        snake[i] = RIGHT;
-    if (starting_questions(argc, argv, &resume) == 1)
+    int rowtot, coltot, lose = 0, store = 0;
+    if (starting_questions(argc, argv) == 1)
         return 0;
     srand(time(NULL));
     initscr();
     getmaxyx(stdscr, rowtot, coltot);
     if (check_term_size(rowtot, coltot) == 1)
         return 1;
-    screen_init(rowtot, coltot, resume);
-    grid_init(resume);
+    screen_init(rowtot, coltot);
+    grid_init();
     while ((!lose) && (!store))
         main_cycle(&lose, &store);
     screen_end(rowtot, coltot, lose, store);
@@ -87,7 +85,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static int starting_questions(int argc, char *argv[], int *resume)
+static int starting_questions(int argc, char *argv[])
 {
     if ((argc == 1) || (((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
         printf("Helper message.\nStart this program with:\n\t'-n' if you want to play a new game;\n\t'-r' to resume your last saved game;\n\t'-s' to view your top scores.\n");
@@ -98,7 +96,7 @@ static int starting_questions(int argc, char *argv[], int *resume)
         return 1;
     }
     if (((strcmp(argv[1],"-r")) == 0))
-        resume_func(resume);
+        resume_func();
     return 0;
 }
 
@@ -115,7 +113,7 @@ static int check_term_size(int rowtot, int coltot)
     return 0;
 }
 
-static void screen_init(int rowtot, int coltot, int resume)
+static void screen_init(int rowtot, int coltot)
 {
     start_color();
     init_pair(1, COLOR_RED, COLOR_BLACK);
@@ -136,7 +134,7 @@ static void screen_init(int rowtot, int coltot, int resume)
     wattroff(field, COLOR_PAIR);
     mvwprintw(score, 2, 1, "q anytime to *rage* quit. Arrow keys to move. s to save current game and leave.");
     mvwprintw(score, 1, 1, "Points: ");
-    if (resume)
+    if (ps.size != STARTING_SIZE)
         wattron(score, A_BOLD);
     mvwprintw(score, 1, strlen("Points: ") + 1, "%d", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
     wattron(field, A_BOLD);
@@ -197,10 +195,10 @@ static void fruit_gen(void)
     colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
 }
 
-static void grid_init(int resume)
+static void grid_init()
 {
     print_initial_snake(ps.snake_head.x, ps.snake_head.y, 0);
-    if (!resume)
+    if (ps.fruit_coord.x == -1)
         fruit_gen();
     else
         colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
@@ -284,20 +282,23 @@ static void colored_print(WINDOW *win, int x, int y, char *c, int color)
     wattroff(win, COLOR_PAIR);
 }
 
-static void resume_func(int *resume)
+static void resume_func(void)
 {
+    int i;
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
     if ((f = fopen(path_resume_file, "r"))) {
         fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
-        snake = realloc(snake, sizeof(int) * ps.size);
+        snake = malloc(sizeof(int) * ps.size);
         fread(snake, sizeof(int), ps.size, f);
         fclose(f);
         remove(path_resume_file);
-        *resume = 1;
     } else {
         printf("No previous games found. Starting a new match.\n");
         sleep(1);
+        snake = malloc(sizeof(int) * STARTING_SIZE);
+        for (i = 0; i < STARTING_SIZE; i++)
+            snake[i] = RIGHT;
     }
 }
 
