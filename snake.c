@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
 
 static int starting_questions(int argc, char *argv[])
 {
+    int i;
     if ((argc == 1) || (((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
         printf("Helper message.\nStart this program with:\n\t'-n' if you want to play a new game;\n\t'-r' to resume your last saved game;\n\t'-s' to view your top scores.\n");
         return 1;
@@ -95,6 +96,9 @@ static int starting_questions(int argc, char *argv[])
         print_score_list();
         return 1;
     }
+    snake = malloc(sizeof(int) * STARTING_SIZE);
+    for (i = 0; i < STARTING_SIZE; i++)
+        snake[i] = RIGHT;
     if (((strcmp(argv[1],"-r")) == 0))
         resume_func();
     return 0;
@@ -284,7 +288,6 @@ static void colored_print(WINDOW *win, int x, int y, char *c, int color)
 
 static void resume_func(void)
 {
-    int i;
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
     if ((f = fopen(path_resume_file, "r"))) {
@@ -296,9 +299,6 @@ static void resume_func(void)
     } else {
         printf("No previous games found. Starting a new match.\n");
         sleep(1);
-        snake = malloc(sizeof(int) * STARTING_SIZE);
-        for (i = 0; i < STARTING_SIZE; i++)
-            snake[i] = RIGHT;
     }
 }
 
