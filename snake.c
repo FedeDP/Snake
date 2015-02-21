@@ -11,6 +11,7 @@
 #define MAX_SCORE_LENGTH 9
 #define FRUIT_POINTS 7
 #define HEAD 0
+#define DELAY 30000
 
 /* eigenvectors associated to snake movements */
 #define RIGHT 10
@@ -130,7 +131,7 @@ static void screen_init(int rowtot, int coltot)
     field = subwin(stdscr, ROWS + 2, COLS + 2, (rowtot - 6 - ROWS) / 2, (coltot - COLS - 2) / 2);
     score = subwin(stdscr, 2 + 2, coltot, rowtot - 4, 0);
     keypad(field, TRUE);
-    wtimeout(field, 30);
+    nodelay(field, TRUE);
     wattron(field, COLOR_PAIR(4));
     wattron(score, COLOR_PAIR(3));
     wborder(field, '|', '|', '-', '-', '+', '+', '+', '+');
@@ -264,6 +265,7 @@ static void main_cycle(int *lose, int *store)
             *lose = 1;
             break;
     }
+    usleep(DELAY);
 }
 
 static void eat_fruit(void)
@@ -329,13 +331,13 @@ static void store_score(void)
             free(score_list);
             return;
         }
-        for(i = 0; (score_list[i] < score_list[i + 1]) && (i < dim - 1); i++) {
+        for (i = 0; (score_list[i] < score_list[i + 1]) && (i < dim - 1); i++) {
             score_list[i] = score_list[i + 1];
             score_list[i + 1] = points;
         }
     }
     f = fopen(path_score_file, "w");
-    for(i = 0; (i < dim) && (i < MAX_SCORE_LENGTH); i++)
+    for (i = 0; (i < dim) && (i < MAX_SCORE_LENGTH); i++)
         fprintf(f, "%d\n", score_list[i]);
     fclose(f);
     free(score_list);
@@ -354,7 +356,7 @@ static void print_score_list(void)
         dim = i;
         fclose(f);
         printf("\tTop scores:\n");
-        for(i = 0; i < dim; i++)
+        for (i = 0; i < dim; i++)
             printf("\t\t%d) %d\n", i + 1, score_list[i]);
         free(score_list);
     } else {
