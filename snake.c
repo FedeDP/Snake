@@ -187,7 +187,7 @@ static void screen_end(int rowtot, int coltot, int lose, int store)
 
 static void print_initial_snake(int x, int y, int i)
 {
-    if (i != ps.size) {
+    if (i != ps.size - 1) {
         colored_print(field, x, y, SNAKE_CHAR, 2);
         i++;
         x = ((x - (snake[i] % 10)) + ROWS) % ROWS;
@@ -320,7 +320,7 @@ static void init_func(char *argv)
     }
 }
 
-static void store_and_exit()
+static void store_and_exit(void)
 {
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = fopen(path_resume_file, "w");
