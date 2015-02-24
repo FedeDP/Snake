@@ -365,6 +365,7 @@ static void print_score_list(void)
     FILE *f = NULL;
     int i, score;
     if ((f = fopen(path_score_file, "r"))) {
+        printf("\t\tTop scores:\n");
         for (i = 0; (!feof(f) && (i < MAX_SCORE_LENGTH)); i++) {
             fscanf(f, "%d\n", &score);
             printf("\t\t%d) %d\n", i + 1, score);
