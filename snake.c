@@ -353,7 +353,7 @@ static void store_score(void)
         }
     }
     f = fopen(path_score_file, "w");
-    for (i = 0; (i < dim) && (i < MAX_SCORE_LENGTH); i++)
+    for (i = 0; i < dim; i++)
         fprintf(f, "%d\n", score_list[i]);
     fclose(f);
     free(score_list);
@@ -363,18 +363,13 @@ static void print_score_list(void)
 {
     char *path_score_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake_score.txt");
     FILE *f = NULL;
-    int *score_list = NULL, i, dim;
+    int i, score;
     if ((f = fopen(path_score_file, "r"))) {
         for (i = 0; (!feof(f) && (i < MAX_SCORE_LENGTH)); i++) {
-            score_list = realloc(score_list, (i + 1) * sizeof(int));
-            fscanf(f, "%d\n", &score_list[i]);
+            fscanf(f, "%d\n", &score);
+            printf("\t\t%d) %d\n", i + 1, score);
         }
-        dim = i;
         fclose(f);
-        printf("\tTop scores:\n");
-        for (i = 0; i < dim; i++)
-            printf("\t\t%d) %d\n", i + 1, score_list[i]);
-        free(score_list);
     } else {
         printf("No score list found.\n");
     }
