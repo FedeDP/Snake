@@ -14,16 +14,17 @@
 #define DEFAULT_SPEED 28000
 #define HARD_SPEED 22000
 #define EASY_SPEED 30000
-
+#define STORE -1
+#define LEAVE_OR_LOSE 1
+#define SNAKE_COLOR 2
+#define FRUIT_COLOR 1
+#define SNAKE_CHAR "O"
+#define FRUIT_CHAR "*"
 /* eigenvectors associated to snake movements */
 #define RIGHT 10
 #define LEFT -10
 #define UP -1
 #define DOWN 1
-
-/* chars to be printed */
-#define SNAKE_CHAR "O"
-#define FRUIT_CHAR "*"
 
 /* Coordinates of snake's head and tail */
 struct point {
@@ -45,15 +46,15 @@ struct state {
 static int starting_questions(int argc, char *argv[]);
 static int check_term_size(int rowtot, int coltot);
 static void screen_init(int rowtot, int coltot);
-static void screen_end(int rowtot, int coltot, int lose, int store);
+static void screen_end(int rowtot, int coltot, int quit_value);
 static void print_initial_snake(int x, int y);
 static void fruit_gen(void);
 static void grid_init(void);
 static void change_directions(void);
 static void eat_fruit(void);
-static void snake_move(int *lose);
+static void snake_move(int *quit_value);
 static void snake_grow(void);
-static void main_cycle(int *lose, int *store);
+static void main_cycle(int *quit_value);
 static void colored_print(WINDOW *win, int x, int y, char *c, int color);
 static void init_func(char *argv);
 static void store_and_exit(void);
@@ -73,7 +74,7 @@ static int *snake = NULL;
 
 int main(int argc, char *argv[])
 {
-    int rowtot, coltot, lose = 0, store = 0;
+    int rowtot, coltot, quit_value = 0;
     if (starting_questions(argc, argv) == 1)
         return 0;
     srand(time(NULL));
@@ -83,9 +84,9 @@ int main(int argc, char *argv[])
         return 1;
     screen_init(rowtot, coltot);
     grid_init();
-    while ((!lose) && (!store))
-        main_cycle(&lose, &store);
-    screen_end(rowtot, coltot, lose, store);
+    while (!quit_value)
+        main_cycle(&quit_value);
+    screen_end(rowtot, coltot, quit_value);
     free(snake);
     return 0;
 }
@@ -159,7 +160,7 @@ static void screen_init(int rowtot, int coltot)
     wrefresh(score);
 }
 
-static void screen_end(int rowtot, int coltot, int lose, int store)
+static void screen_end(int rowtot, int coltot, int quit_value)
 {
     char exitmsg[] = "Leaving...bye! See you later :)";
     wclear(field);
@@ -168,13 +169,12 @@ static void screen_end(int rowtot, int coltot, int lose, int store)
     delwin(score);
     attron(COLOR_PAIR(rand() % 4 + 1));
     attron(A_BOLD);
-    if (lose) {
+    if (quit_value == LEAVE_OR_LOSE) {
         if (ps.size != STARTING_SIZE)
             store_score();
         mvprintw(rowtot / 2, (coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
     } else {
-        if (store)
-            store_and_exit();
+        store_and_exit();
         mvprintw(rowtot / 2, (coltot - strlen(exitmsg)) / 2, "%s", exitmsg);
     }
     refresh();
@@ -188,11 +188,11 @@ static void screen_end(int rowtot, int coltot, int lose, int store)
 static void print_initial_snake(int x, int y)
 {
     int j;
-    colored_print(field, x, y, SNAKE_CHAR, 2);
+    colored_print(field, x, y, SNAKE_CHAR, SNAKE_COLOR);
     for (j = 1; j < ps.size; j++) {
         x = ((x - (snake[j] % 10)) + ROWS) % ROWS;
         y = ((y - (snake[j] / 10)) + COLS) % COLS;
-        colored_print(field, x, y, SNAKE_CHAR, 2);
+        colored_print(field, x, y, SNAKE_CHAR, SNAKE_COLOR);
     }
 }
 
@@ -207,19 +207,19 @@ static void fruit_gen(void)
         ps.fruit_coord.y = j - (ps.fruit_coord.x * COLS);
         j = (j + 1 + (tot)) % (tot);
     } while ((mvwinch(field,  ps.fruit_coord.x + 1,  ps.fruit_coord.y + 1) & A_CHARTEXT) == *SNAKE_CHAR);
-    colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
+    colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, FRUIT_COLOR);
 }
 
-static void grid_init()
+static void grid_init(void)
 {
     print_initial_snake(ps.snake_head.x, ps.snake_head.y);
     if (ps.fruit_coord.x == -1)
         fruit_gen();
     else
-        colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, 1);
+        colored_print(field, ps.fruit_coord.x, ps.fruit_coord.y, FRUIT_CHAR, FRUIT_COLOR);
 }
 
-static void snake_move(int *lose)
+static void snake_move(int *quit_value)
 {
     ps.snake_head.x = ((ps.snake_head.x + snake[HEAD] % 10) + ROWS) % ROWS;
     ps.snake_head.y = ((ps.snake_head.y + snake[HEAD] / 10) + COLS) % COLS;
@@ -232,11 +232,11 @@ static void snake_move(int *lose)
         ps.snake_tail.x = ((ps.snake_tail.x + snake[ps.size - 1] % 10) + ROWS) % ROWS;
         ps.snake_tail.y = ((ps.snake_tail.y + snake[ps.size - 1] / 10) + COLS) % COLS;
         if ((mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
-            *lose = 1;
+            *quit_value = 1;
             return;
         }
     }
-    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, 2);
+    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, SNAKE_COLOR);
 }
 
 static void change_directions(void)
@@ -246,9 +246,9 @@ static void change_directions(void)
         snake[i] = snake[i - 1];
 }
 
-static void main_cycle(int *lose, int *store)
+static void main_cycle(int *quit_value)
 {
-    snake_move(lose);
+    snake_move(quit_value);
     change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
     switch (wgetch(field)) {
@@ -268,11 +268,11 @@ static void main_cycle(int *lose, int *store)
             if (snake[HEAD] != UP)
                 snake[HEAD] = DOWN;
             break;
-        case 's': /* "s" to store current game and exit */
-            *store = 1;
+        case 's':
+            *quit_value = STORE;
             break;
         case 'q': /* q to exit */
-            *lose = 1;
+            *quit_value = LEAVE_OR_LOSE;
             break;
     }
     usleep(ps.delay);
