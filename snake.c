@@ -394,6 +394,5 @@ static void manage_memory_error(void)
     delwin(score);
     endwin();
     delwin(stdscr);
-    printf("Memory allocation failed. Leaving.\n");
-    exit(0);
+    EXIT_FAILURE;
 }
