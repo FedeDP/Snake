@@ -288,7 +288,7 @@ static void eat_fruit(void)
 
 static void snake_grow(void)
 {
-    if (!(snake = realloc(snake, ps.size * sizeof(int))))
+    if ((snake = realloc(snake, ps.size * sizeof(int))))
         manage_memory_error();
     snake[ps.size - 1] = snake[ps.size - 2];
 }
@@ -394,5 +394,6 @@ static void manage_memory_error(void)
     delwin(score);
     endwin();
     delwin(stdscr);
-    EXIT_FAILURE;
+    printf("Memory allocation failed. Leaving.\n");
+    exit(EXIT_FAILURE);
 }
