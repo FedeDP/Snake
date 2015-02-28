@@ -60,6 +60,7 @@ static void init_func(char *argv);
 static void store_and_exit(void);
 static void store_score(void);
 static void print_score_list(void);
+static void manage_memory_error(void);
 
 /* Give default "new match" values to program state struct */
 static struct state ps = {
@@ -287,7 +288,8 @@ static void eat_fruit(void)
 
 static void snake_grow(void)
 {
-    snake = realloc(snake, ps.size * sizeof(int));
+    if (!(snake = realloc(snake, ps.size * sizeof(int))))
+        manage_memory_error();
     snake[ps.size - 1] = snake[ps.size - 2];
 }
 
@@ -305,7 +307,8 @@ static void init_func(char *argv)
     int i, resume = strcmp(argv, "-r");
     if ((resume == 0) && (f = fopen(path_resume_file, "r"))) {
         fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
-        snake = malloc(sizeof(int) * ps.size);
+        if(!(snake = malloc(sizeof(int) * ps.size)))
+            manage_memory_error();
         fread(snake, sizeof(int), ps.size, f);
         fclose(f);
         remove(path_resume_file);
@@ -314,7 +317,8 @@ static void init_func(char *argv)
             printf("No previous games found. Starting a new match.\n");
             sleep(1);
         }
-        snake = malloc(sizeof(int) * STARTING_SIZE);
+        if (!(snake = malloc(sizeof(int) * STARTING_SIZE)))
+            manage_memory_error();
         for (i = 0; i < STARTING_SIZE; i++)
             snake[i] = RIGHT;
     }
@@ -335,10 +339,15 @@ static void store_score(void)
     FILE *f = NULL;
     int i, dim = 1, points = (ps.size - STARTING_SIZE) * FRUIT_POINTS;
     int *score_list = malloc(sizeof(int));
+    if (!score_list)
+        manage_memory_error();
     score_list[0] = points;
     if ((f = fopen(path_score_file, "r"))) {
         for (i = 1; (i < MAX_SCORE_LENGTH) && (!feof(f)); i++) {
-            score_list = realloc(score_list, (i + 1) * sizeof(int));
+            if (!(score_list = realloc(score_list, (i + 1) * sizeof(int)))) {
+                free(score_list);
+                manage_memory_error();
+            }
             fscanf(f, "%d\n", &score_list[i]);
         }
         fclose(f);
@@ -374,4 +383,17 @@ static void print_score_list(void)
     } else {
         printf("No score list found.\n");
     }
+}
+
+static void manage_memory_error(void)
+{
+    free(snake);
+    wclear(field);
+    wclear(score);
+    delwin(field);
+    delwin(score);
+    endwin();
+    delwin(stdscr);
+    printf("Memory allocation failed. Leaving.\n");
+    exit(0);
 }
