@@ -288,7 +288,7 @@ static void eat_fruit(void)
 
 static void snake_grow(void)
 {
-    if ((snake = realloc(snake, ps.size * sizeof(int))))
+    if (!(snake = realloc(snake, ps.size * sizeof(int))))
         manage_memory_error();
     snake[ps.size - 1] = snake[ps.size - 2];
 }
