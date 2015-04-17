@@ -60,6 +60,7 @@ static void store_and_exit(void);
 static void store_score(void);
 static void print_score_list(void);
 static void manage_memory_error(void);
+static int *safe_realloc(int *ptr, size_t size);
 
 /* Give default "new match" values to program state struct */
 static struct state ps = {
@@ -287,8 +288,7 @@ static void eat_fruit(void)
 
 static void snake_grow(void)
 {
-    if (!(snake = realloc(snake, ps.size * sizeof(int))))
-        manage_memory_error();
+    snake = safe_realloc(snake, ps.size * sizeof(int));
     snake[ps.size - 1] = snake[ps.size - 2];
 }
 
@@ -304,10 +304,10 @@ static void init_func(char *argv)
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
     int i, resume = strcmp(argv, "-r");
-    if ((resume == 0) && (f = fopen(path_resume_file, "r"))) {
+    if ((resume == 0) && (f = fopen(path_resume_file, "r")))
         fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
-        if(!(snake = malloc(sizeof(int) * ps.size)))
-            manage_memory_error();
+    snake = safe_realloc(snake, sizeof(int) * ps.size);
+    if (f) {
         fread(snake, sizeof(int), ps.size, f);
         fclose(f);
         remove(path_resume_file);
@@ -316,9 +316,7 @@ static void init_func(char *argv)
             printf("No previous games found. Starting a new match.\n");
             sleep(1);
         }
-        if (!(snake = malloc(sizeof(int) * STARTING_SIZE)))
-            manage_memory_error();
-        for (i = 0; i < STARTING_SIZE; i++)
+        for (i = 0; i < ps.size; i++)
             snake[i] = RIGHT;
     }
 }
@@ -386,4 +384,11 @@ static void manage_memory_error(void)
     delwin(stdscr);
     printf("Memory allocation failed. Leaving.\n");
     exit(EXIT_FAILURE);
+}
+
+static int *safe_realloc(int *ptr, size_t size)
+{
+    if (!(ptr = realloc(ptr, size)))
+        manage_memory_error();
+    return ptr;
 }
