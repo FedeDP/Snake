@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
-#define ROWS 1
+#define ROWS 30
 #define COLS 120
 #define STARTING_SIZE 3
 #define MAX_SCORE_LENGTH 9
