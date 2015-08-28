@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
-#define ROWS 30
+#define ROWS 1
 #define COLS 120
 #define STARTING_SIZE 3
 #define MAX_SCORE_LENGTH 9
@@ -330,10 +330,6 @@ static void init_func(char *argv)
         fclose(f);
         remove(path_resume_file);
     } else {
-        if (resume == 0) {
-            printf("No previous games found. Starting a new match.\n");
-            sleep(1);
-        }
         for (i = 0; i < ps.size; i++) {
             snake[i] = RIGHT;
         }
