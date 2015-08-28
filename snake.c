@@ -76,13 +76,16 @@ static int *snake;
 int main(int argc, char *argv[])
 {
     int rowtot, coltot, quit_value = 0;
+
     starting_questions(argc, argv);
     srand(time(NULL));
     initscr();
     getmaxyx(stdscr, rowtot, coltot);
     check_term_size(rowtot, coltot);
     screen_init(rowtot, coltot);
+    init_func(argv[1]);
     grid_init();
+    wrefresh(field);
     while (!quit_value) {
         main_cycle(&quit_value);
     }
@@ -101,7 +104,6 @@ static void starting_questions(int argc, char *argv[])
         print_score_list();
         exit(0);
     }
-    init_func(argv[1]);
     if (argc == 3) {
         if ((((strcmp(argv[argc - 1],"easy")) != 0)) && (((strcmp(argv[argc - 1],"hard")) != 0))) {
             printf ("Level not recognized. Playing at default level.\n");
@@ -163,6 +165,7 @@ static void screen_init(int rowtot, int coltot)
 static void screen_end(int rowtot, int coltot, int quit_value)
 {
     char exitmsg[] = "Leaving...bye! See you later :)";
+
     wclear(field);
     wclear(score);
     delwin(field);
@@ -189,6 +192,7 @@ static void screen_end(int rowtot, int coltot, int quit_value)
 static void print_initial_snake(int x, int y)
 {
     int j;
+
     colored_print(field, x, y, SNAKE_CHAR, SNAKE_COLOR);
     for (j = 1; j < ps.size; j++) {
         x = ((x - (snake[j] % 10)) + ROWS) % ROWS;
@@ -200,6 +204,7 @@ static void print_initial_snake(int x, int y)
 static void fruit_gen(void)
 {
     int j, tot = ROWS * COLS;
+
     if ((tot) == ps.size) {
         return;
     }
@@ -224,9 +229,13 @@ static void grid_init(void)
 
 static void snake_move(int *quit_value)
 {
+    char c;
+
     ps.snake_head.x = ((ps.snake_head.x + snake[0] % 10) + ROWS) % ROWS;
     ps.snake_head.y = ((ps.snake_head.y + snake[0] / 10) + COLS) % COLS;
-    if ((mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT) == *FRUIT_CHAR) {
+    c = mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT;
+    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, SNAKE_COLOR);
+    if (c == *FRUIT_CHAR) {
         eat_fruit();
         mvwprintw(score, 1, strlen("Points: ") + 1, "%d", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
         wrefresh(score);
@@ -234,17 +243,17 @@ static void snake_move(int *quit_value)
         mvwprintw(field, ps.snake_tail.x + 1,  ps.snake_tail.y + 1, " ");
         ps.snake_tail.x = ((ps.snake_tail.x + snake[ps.size - 1] % 10) + ROWS) % ROWS;
         ps.snake_tail.y = ((ps.snake_tail.y + snake[ps.size - 1] / 10) + COLS) % COLS;
-        if ((mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT) == *SNAKE_CHAR) {
+        if (c == *SNAKE_CHAR) {
             *quit_value = 1;
             return;
         }
     }
-    colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, SNAKE_COLOR);
 }
 
 static void change_directions(void)
 {
     int i;
+
     for (i = ps.size - 1; i > 0; i--) {
         snake[i] = snake[i - 1];
     }
@@ -252,8 +261,6 @@ static void change_directions(void)
 
 static void main_cycle(int *quit_value)
 {
-    snake_move(quit_value);
-    change_directions();
     wmove(field, ps.snake_head.x + 1, ps.snake_head.y + 1);
     switch (wgetch(field)) {
         case KEY_LEFT:
@@ -283,6 +290,8 @@ static void main_cycle(int *quit_value)
             *quit_value = LEAVE_OR_LOSE;
             break;
     }
+    snake_move(quit_value);
+    change_directions();
     usleep(ps.delay);
 }
 
@@ -311,6 +320,7 @@ static void init_func(char *argv)
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = NULL;
     int i, resume = strcmp(argv, "-r");
+
     if ((resume == 0) && (f = fopen(path_resume_file, "r"))) {
         fread(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
     }
@@ -334,6 +344,7 @@ static void store_and_exit(void)
 {
     char *path_resume_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake.txt");
     FILE *f = fopen(path_resume_file, "w");
+
     fwrite(&ps, sizeof(int), sizeof(struct state) / sizeof(int), f);
     fwrite(snake, sizeof(int), ps.size, f);
     fclose(f);
@@ -345,6 +356,7 @@ static void store_score(void)
     FILE *f = NULL;
     int i = 0, points = (ps.size - STARTING_SIZE) * FRUIT_POINTS, old_points;
     long int len;
+
     if ((f = fopen(path_score_file, "r+"))) {
         while ((i < MAX_SCORE_LENGTH) && (!feof(f))) {
             len = ftell(f);
@@ -371,6 +383,7 @@ static void print_score_list(void)
     char *path_score_file = strcat(getpwuid(getuid())->pw_dir, "/.local/share/snake_score.txt");
     FILE *f = NULL;
     int i, score;
+
     if ((f = fopen(path_score_file, "r"))) {
         printf("\t\tTop scores:\n");
         for (i = 0; (!feof(f) && (i < MAX_SCORE_LENGTH)); i++) {
