@@ -36,6 +36,7 @@ struct point {
 struct state {
     int size;
     int delay;
+    int propagate_dir;
     struct point snake_head;
     struct point snake_tail;
     struct point fruit_coord;
@@ -66,6 +67,7 @@ static int *safe_realloc(int *ptr, size_t size);
 static struct state ps = {
     .delay = DEFAULT_SPEED,
     .size = STARTING_SIZE,
+    .propagate_dir = 0,
     .snake_head = {ROWS/2, COLS/2},
     .snake_tail = {ROWS/2, COLS/2 - (STARTING_SIZE - 1)},
     .fruit_coord = {-1, -1}
@@ -235,7 +237,7 @@ static void snake_move(int *quit_value)
     ps.snake_head.y = ((ps.snake_head.y + snake[0] / 10) + COLS) % COLS;
     c = mvwinch(field, ps.snake_head.x + 1, ps.snake_head.y + 1) & A_CHARTEXT;
     colored_print(field, ps.snake_head.x, ps.snake_head.y, SNAKE_CHAR, SNAKE_COLOR);
-    if (c == *FRUIT_CHAR) {
+    if ((ps.snake_head.x == ps.fruit_coord.x) && (ps.snake_head.y == ps.fruit_coord.y)) {
         eat_fruit();
         mvwprintw(score, 1, strlen("Points: ") + 1, "%d", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
         wrefresh(score);
@@ -254,8 +256,12 @@ static void change_directions(void)
 {
     int i;
 
-    for (i = ps.size - 1; i > 0; i--) {
+    for (i = ps.size - 1; i >= ps.propagate_dir; i--) {
         snake[i] = snake[i - 1];
+    }
+    ps.propagate_dir++;
+    if (ps.propagate_dir == ps.size) {
+        ps.propagate_dir = 0;
     }
 }
 
@@ -266,21 +272,25 @@ static void main_cycle(int *quit_value)
         case KEY_LEFT:
             if (snake[0] != RIGHT) {
                 snake[0] = LEFT;
+                ps.propagate_dir = 1;
             }
             break;
         case KEY_RIGHT:
             if (snake[0] != LEFT) {
                 snake[0] = RIGHT;
+                ps.propagate_dir = 1;
             }
             break;
         case KEY_UP:
             if (snake[0] != DOWN) {
                 snake[0] = UP;
+                ps.propagate_dir = 1;
             }
             break;
         case KEY_DOWN:
             if (snake[0] != UP) {
                 snake[0] = DOWN;
+                ps.propagate_dir = 1;
             }
             break;
         case 's':
@@ -291,7 +301,9 @@ static void main_cycle(int *quit_value)
             break;
     }
     snake_move(quit_value);
-    change_directions();
+    if (ps.propagate_dir) {
+        change_directions();
+    }
     usleep(ps.delay);
 }
 
