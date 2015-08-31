@@ -47,7 +47,7 @@ static void starting_questions(int argc, char *argv[]);
 static void check_term_size(int rowtot, int coltot);
 static void screen_init(int rowtot, int coltot);
 static void screen_end(int rowtot, int coltot, int quit_value);
-static void print_initial_snake(int x, int y);
+static void print_initial_snake(int x, int y, int j);
 static void fruit_gen(void);
 static void grid_init(void);
 static void change_directions(void);
@@ -175,9 +175,7 @@ static void screen_end(int rowtot, int coltot, int quit_value)
     attron(COLOR_PAIR(rand() % 4 + 1));
     attron(A_BOLD);
     if (quit_value == LEAVE_OR_LOSE) {
-        if (ps.size != STARTING_SIZE) {
-            store_score();
-        }
+        store_score();
         mvprintw(rowtot / 2, (coltot - strlen("You scored %d points!")) / 2, "You scored %d points!", (ps.size - STARTING_SIZE) * FRUIT_POINTS);
     } else {
         store_and_exit();
@@ -191,15 +189,13 @@ static void screen_end(int rowtot, int coltot, int quit_value)
     delwin(stdscr);
 }
 
-static void print_initial_snake(int x, int y)
+static void print_initial_snake(int x, int y, int j)
 {
-    int j;
-
     colored_print(field, x, y, SNAKE_CHAR, SNAKE_COLOR);
-    for (j = 1; j < ps.size; j++) {
-        x = ((x - (snake[j] % 10)) + ROWS) % ROWS;
-        y = ((y - (snake[j] / 10)) + COLS) % COLS;
-        colored_print(field, x, y, SNAKE_CHAR, SNAKE_COLOR);
+    x = ((x - (snake[j] % 10)) + ROWS) % ROWS;
+    y = ((y - (snake[j] / 10)) + COLS) % COLS;
+    if (j++ < ps.size) {
+        return print_initial_snake(x, y, j);
     }
 }
 
@@ -221,7 +217,7 @@ static void fruit_gen(void)
 
 static void grid_init(void)
 {
-    print_initial_snake(ps.snake_head.x, ps.snake_head.y);
+    print_initial_snake(ps.snake_head.x, ps.snake_head.y, 1);
     if (ps.fruit_coord.x == -1) {
         fruit_gen();
     } else {
