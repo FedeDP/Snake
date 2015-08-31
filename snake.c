@@ -246,7 +246,7 @@ static void snake_move(int *quit_value)
         ps.snake_tail.x = ((ps.snake_tail.x + snake[ps.size - 1] % 10) + ROWS) % ROWS;
         ps.snake_tail.y = ((ps.snake_tail.y + snake[ps.size - 1] / 10) + COLS) % COLS;
         if (c == *SNAKE_CHAR) {
-            *quit_value = 1;
+            *quit_value = LEAVE_OR_LOSE;
             return;
         }
     }
