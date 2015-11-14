@@ -183,8 +183,6 @@ static void screen_end(int rowtot, int coltot, int quit_value)
     }
     refresh();
     sleep(1);
-    attroff(COLOR_PAIR);
-    attroff(A_BOLD);
     endwin();
     delwin(stdscr);
 }
