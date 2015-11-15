@@ -123,7 +123,6 @@ static void starting_questions(int argc, char *argv[])
 static void check_term_size(int rowtot, int coltot)
 {
     if ((rowtot < ROWS + 6) || (coltot < COLS + 2)) {
-        clear();
         endwin();
         delwin(stdscr);
         printf("This screen has %d rows and %d columns. Enlarge it.\n", rowtot, coltot);
