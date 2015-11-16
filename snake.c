@@ -93,18 +93,18 @@ int main(int argc, char *argv[])
     }
     screen_end(rowtot, coltot, quit_value);
     free(snake);
-    return 0;
+    exit(EXIT_SUCCESS);
 }
 
 static void starting_questions(int argc, char *argv[])
 {
     if ((argc == 1) || (((strcmp(argv[1],"-n")) != 0) && ((strcmp(argv[1],"-r")) != 0) && ((strcmp(argv[1],"-s")) != 0))) {
         printf("Helper message.\nStart this program with:\n\t'-n $level'\tif you want to play a new game, where '$level' is one between easy and hard.\n\t\t\tLeaving only '-n' will play default level;\n\t'-r'\t\tto resume your last saved game;\n\t'-s'\t\tto view your top scores.\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     if (((strcmp(argv[1],"-s")) == 0)) {
         print_score_list();
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     if (argc == 3) {
         if ((((strcmp(argv[argc - 1],"easy")) != 0)) && (((strcmp(argv[argc - 1],"hard")) != 0))) {
@@ -127,7 +127,7 @@ static void check_term_size(int rowtot, int coltot)
         delwin(stdscr);
         printf("This screen has %d rows and %d columns. Enlarge it.\n", rowtot, coltot);
         printf("You need at least %d rows and %d columns.\n", ROWS + 6, COLS + 2);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
